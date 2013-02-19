@@ -1,0 +1,4 @@
+#!/bin/sh
+export STAGING_DIR="/opt/openwrt/trunk/staging_dir/toolchain-mips_r2_gcc-4.6-linaro_uClibc-0.9.33.2/"
+export PATH="$STAGING_DIR/bin:$PATH"
+mips-openwrt-linux-strip "$@"

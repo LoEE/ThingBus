@@ -1,0 +1,4 @@
+#!/bin/sh
+export STAGING_DIR="/mnt/openwrt/staging_dir"
+export PATH="$STAGING_DIR/toolchain-i386_gcc-4.6-linaro_uClibc-0.9.33/bin:$PATH"
+i486-openwrt-linux-uclibc-gcc "$@"

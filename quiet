@@ -1,0 +1,62 @@
+#!/bin/sh
+HELP='Usage:
+  quiet fname cmd args ...
+
+Runs the  passed in command  printing only  "cmd" and "fname"  unless an
+error  occurs  in which  case  it  prints  the  whole command  line  and
+colorized program output. Useful  for running compilation commands since
+it removes the cluter, making it easier to spot errors and warnings.
+
+'
+# Copyright (c) 2008-2010 LoEE
+# This program is released under the new BSD license.
+
+if [ $# -lt 2 ]; then
+  printf "$HELP"
+  exit
+fi
+
+GREEN=""
+RED=""
+NORM=""
+if [ "$TERM@" = "rxvt@" -o "$TERM@" = "xterm-256color@" ]; then
+  GREEN="printf \033[32m"
+  RED="printf \033[31m"
+  YELLOW="printf \033[33m" # this is not yellow :)
+  NORM="printf \033[m\017"
+fi
+if [ "$OSTYPE@" = "msys@" ]; then
+  OLDATTR=$(eecolor.exe)
+  GREEN="eecolor.exe 0 10"
+  RED="eecolor.exe 0 12"  
+  YELLOW="eecolor 0 14"
+  NORM="eecolor.exe ${OLDATTR}"   
+fi
+
+MSG="$(printf "%-16s $1" "$2")"
+shift;
+
+printf "${MSG}\r" 1>&2
+
+rm -f quiet.log
+"$@" 2>> quiet.log
+RET=$?
+# if we check $? we won't notice the warnings
+if [ $RET -ne 0 -o -s quiet.log ]; then
+  echo "$@" >& 2
+  if [ $RET -ne 0 ]; then
+    $RED >& 2
+  else 
+    $YELLOW >& 2
+  fi
+  cat quiet.log >& 2
+  $NORM >& 2
+
+  exit $RET
+else
+  $GREEN >& 2
+  printf "${MSG}\n" 1>&2
+  $NORM >& 2
+fi
+rm quiet.log
+exit $RET

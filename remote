@@ -1,0 +1,17 @@
+#!/bin/zsh
+
+set -e
+
+HOST="$1"
+HOSTDIR="jpc"
+ARCH="$2"
+
+if [ "$HOST" = "" -o "$ARCH" = "" ]; then
+	echo "usage: $0 host architecture"
+	exit 1
+fi
+
+rsync -avzP --exclude='.*' --exclude='/thb-*' --exclude=/install/ . ${HOST}:$HOSTDIR/ThingBus/
+ssh $HOST "cd $HOSTDIR/ThingBus && make install/$ARCH"
+rsync -avzP ${HOST}:$HOSTDIR/ThingBus/install/$ARCH install/
+rsync -avzP ${HOST}:$HOSTDIR/ThingBus/"thb-$ARCH*" .

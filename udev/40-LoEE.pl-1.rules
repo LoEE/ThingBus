@@ -1,0 +1,1 @@
+ATTRS{idVendor}=="16d0", ATTRS{idProduct}=="0450", ENV{ID_LoEEpl}="1", MODE="0664", GROUP="plugdev"
