@@ -57,6 +57,21 @@ static int lua_buffer_write (lua_State *L)
   return 0;
 }
 
+static int lua_buffer_peek (lua_State *L)
+{
+  struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
+  uint8_t *s;
+  buflen_t a = buffer_rpeek (&lb->b, &s);
+  if (!a) return 0;
+  if (!lua_isnoneornil (L, 2)) {
+    buflen_t n = luaL_checkinteger (L, 2);
+    if (a < n) return 0;
+    a = n;
+  }
+  lua_pushlstring (L, (char *)s, a);
+  return 1;
+}
+
 static int lua_buffer_read (lua_State *L)
 {
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
@@ -127,6 +142,15 @@ static int lua_buffer_rseek (lua_State *L)
   return 1;
 }
 
+static int lua_buffer_len (lua_State *L)
+{
+  struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
+  uint8_t *c;
+  buflen_t a = buffer_rpeek (&lb->b, &c);
+  lua_pushnumber (L, a);
+  return 1;
+}
+
 static int lua_buffer_debug (lua_State *L)
 {
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
@@ -143,12 +167,14 @@ static const struct luaL_reg functions[] = {
 static const struct luaL_reg buffer_methods[] = {
   {"get",        lua_buffer_get        },
   {"write",      lua_buffer_write      },
+  {"peek",       lua_buffer_peek       },
   {"read",       lua_buffer_read       },
   {"readuntil",  lua_buffer_readuntil  },
   {"peekstruct", lua_buffer_peekstruct },
   {"readstruct", lua_buffer_readstruct },
   {"rseek",      lua_buffer_rseek      },
   {"_debug",     lua_buffer_debug      },
+  {"__len",      lua_buffer_len        },
   {NULL,         NULL                  },
 };
 
