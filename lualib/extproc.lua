@@ -75,6 +75,7 @@ function ExtProc:_handle_connect()
   local sock = self.lsock:accept()
   sock:settimeout(0)
   self.outfd = sock
+  self.statbox:put(true)
   return self:_in_loop(sock)
 end
 
