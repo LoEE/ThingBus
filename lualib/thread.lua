@@ -115,7 +115,7 @@ end
 function Thread.kill (thd)
   if coroutine.status(thd) == 'dead' then return end
   local cthd = oldcurrent()
-  if cthd == thd then error('a thread cannot resume itself', 2) end
+  if cthd == thd then error('a thread cannot kill itself', 2) end
   return resume(thd, false)
 end
 
