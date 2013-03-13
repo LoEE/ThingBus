@@ -38,15 +38,28 @@ static int is_little_endian (void)
 
 static lua_Number extract_number (const uint8_t *s, size_t n, int le, int issigned)
 {
-  unsigned long r = 0;
+  uint32_t r = 0;
   if (le)
-    for (size_t i = 0; i < n; i++) r += *s++ << (i * 8);
+    for (size_t i = 0; i < n; i++) r += (uint32_t)*s++ << (i * 8);
   else
     for (size_t i = 0; i < n; i++) r = (r << 8) + *s++;
   if (!issigned) return r;
-  unsigned long mask = ~(0UL) << (n * 8 - 1);
+  uint32_t mask = ~(0UL) << (n * 8 - 1);
   if (r & mask) r |= mask; // sign extend
-  return (long)r;
+  return (int32_t)r;
+}
+
+static lua_Number extract_number_64 (const uint8_t *s, size_t n, int le, int issigned)
+{
+  uint64_t r = 0;
+  if (le)
+    for (size_t i = 0; i < n; i++) r += (uint64_t)*s++ << (i * 8);
+  else
+    for (size_t i = 0; i < n; i++) r = (r << 8) + *s++;
+  if (!issigned) return r;
+  uint64_t mask = ~(0UL) << (n * 8 - 1);
+  if (r & mask) r |= mask; // sign extend
+  return (int64_t)r;
 }
 
 size_t lua_binary_unpack_ll (lua_State *L, const uint8_t *s, size_t n, const char *f, int *results)
@@ -67,7 +80,10 @@ size_t lua_binary_unpack_ll (lua_State *L, const uint8_t *s, size_t n, const cha
     switch (*c) {
       case 'u':
       case 's':
-        lua_pushnumber (L, extract_number (s, size, le, *c == 's'));
+        if (size <= 4)
+          lua_pushnumber (L, extract_number (s, size, le, *c == 's'));
+        else
+          lua_pushnumber (L, extract_number_64 (s, size, le, *c == 's'));
         s += size; n -= size;
         break;
       case 'c':
