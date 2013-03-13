@@ -37,7 +37,9 @@ if arg[1] then
     dofile(arg[0])
   end
 else
-  if os.basename(arg[0]) ~= "thb" then
+  if os.basename(arg[0]) ~= "thb" and os.basename(arg[0]) ~= "thb.exe" then
+    os.program_path = os.dirname(os.realpath(arg[0]))
+    addtoPATH(os.program_path)
     function main()
       local name = arg[0]
       if name:endswith".exe" then
