@@ -374,9 +374,13 @@ CT.notify.__tostring = CT._default.__tostring
 
 CT.adc = O(CT._default)
 
-function CT.adc:start(fs, samples)
-  local reply = checkerr(self.sepack:setup(self, B.enc32BE(fs)..B.enc32BE(samples)))
+function CT.adc:start(fs)
+  local reply = checkerr(self.sepack:setup(self, B.enc32BE(fs)))
   return B.dec32BE(reply) / 256
+end
+
+function CT.adc:stop()
+  checkerr(self.sepack:setup(self, B.enc32BE(0)))
 end
 
 function CT.adc:_decode(data)
@@ -384,6 +388,7 @@ function CT.adc:_decode(data)
   assert(#data % 2, "invalid ADC data length")
   for i=1,#data,2 do
     local v = B.dec16BE(data, i)
+    if v > 32767 then v = v - 65536 end
     r[#r+1] = v
   end
   return r
