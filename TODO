@@ -1,0 +1,6 @@
+Thread:
+- support functions and threads in Source:register_thread
+- resume(function, ...) means T.go(function, ...)
+- unify callback_list and nice_list? (spawning threads from functions in nice_list)
+- unbuffered Mailboxes (with blocking writes)
+- optimize Mailbox implementation
