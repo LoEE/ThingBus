@@ -135,7 +135,7 @@ static int lua_buffer_rseek (lua_State *L)
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
   size_t n = luaL_checkinteger (L, 2);
   uint8_t *c;
-  size_t a = buffer_rpeek (&lb->b, &c);
+  buflen_t a = buffer_rpeek (&lb->b, &c);
   if (n > a) return 0;
   buffer_rseek (&lb->b, n);
   lua_pushnumber (L, n);
