@@ -33,9 +33,18 @@ static int lua_buffer_new (lua_State *L)
 static int lua_buffer_get (lua_State *L)
 {
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
+  buflen_t off = 0;
   uint8_t *s;
-  buflen_t a = buffer_rpeek (&lb->b, &s);
-  lua_pushlstring (L, (char *)s, a);
+  buflen_t size = buffer_rpeek (&lb->b, &s);
+  if (lua_isnumber (L, 3)) {
+    size_t end = lua_tonumber (L, 3);
+    if (end < size) size = end;
+  }
+  if (lua_isnumber (L, 2)) {
+    off = lua_tonumber (L, 2) - 1;
+    if (off > size) off = size;
+  }
+  lua_pushlstring (L, (char *)(s + off), size - off);
   return 1;
 }
 
