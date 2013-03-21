@@ -138,6 +138,10 @@ int main (int argc, char **argv)
   current_file = "additions";
   luaLM_loadlib (L, luaopen_additions);
 
+  current_file = "checks";
+  extern int luaopen_checks(lua_State *L);
+  luaLM_loadlib (L, luaopen_checks);
+
   current_file = "init platform";
   lua_init_platform(L);
 
