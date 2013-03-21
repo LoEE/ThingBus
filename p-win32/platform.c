@@ -119,6 +119,18 @@ static int os_getpid (lua_State *L)
   return 1;
 }
 
+static int os_time_unix (lua_State *L)
+{
+  FILETIME ft;
+  GetSystemTimeAsFileTime(&ft);
+  // seconds from Windows epoch (1601-01-01 00:00:00 TAI):
+  double t = (ft.dwHighDateTime * 4294967296.0 + ft.dwLowDateTime) * 100e-9;
+  // converted to UNIX epoch (1970-01-01 00:00:00 TAI)
+  t -= 11644473600;
+  lua_pushnumber (L, t);
+  return 1;
+}
+
 static int io_open_osfhandle(lua_State *L)
 {
   int handle = luaLM_checkfd (L, 1);
@@ -186,6 +198,7 @@ void lua_init_platform (lua_State *L)
   const struct luaL_reg os_additions[] = {
     { "forward_console",  os_forward_console },
     { "getpid",           os_getpid          },
+    { "time_unix",        os_time_unix       },
     { 0,                  0                  },
   };
   luaL_register (L, "os", os_additions);

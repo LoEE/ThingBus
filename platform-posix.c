@@ -49,6 +49,18 @@ static int os_getpid (lua_State *L)
   return 1;
 }
 
+#include <sys/time.h>
+
+static int os_time_unix (lua_State *L)
+{
+  struct timeval tp;
+  if (gettimeofday(&tp, NULL) < 0)
+    return luaLM_posix_error (L, "gettimeofday");
+  double t = tp.tv_sec + tp.tv_usec / 1.0e6;
+  lua_pushnumber (L, t);
+  return 1;
+}
+
 static int io_raw_read (lua_State *L)
 {
   int fd = luaLM_checkfd (L, 1);
@@ -116,9 +128,10 @@ void lua_init_platform_posix(lua_State *L)
 {
   luaLM_preload (L, platform_posix_preloads);
   const struct luaL_reg os_additions[] = {
-    { "pipe",    os_pipe   },
-    { "getpid",  os_getpid },
-    { 0,         0         },
+    { "pipe",      os_pipe      },
+    { "getpid",    os_getpid    },
+    { "time_unix", os_time_unix },
+    { 0,           0            },
   };
   luaL_register (L, "os", os_additions);
   const struct luaL_reg io_additions[] = {
