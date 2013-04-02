@@ -1,6 +1,17 @@
+General:
+- names for objects: threads, mailboxes, state machine states, loggers
+- object name: the last part is the name passed to constructor,
+               previous parts come from dynamic scope
+
+State machines:
+- function decorator (logs state changes, updates the current state observable)
+- handle substates/submachines
+
 Thread:
 - support functions and threads in Source:register_thread
 - resume(function, ...) means T.go(function, ...)
+- short-lived thread name is based on the event source name
 - unify callback_list and nice_list? (spawning threads from functions in nice_list)
 - unbuffered Mailboxes (with blocking writes)
 - optimize Mailbox implementation
+- T.recv introspection (see which thread is blocked on which sources)
