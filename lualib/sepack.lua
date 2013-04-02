@@ -56,6 +56,7 @@ function Sepack:_addchn(id, name)
     if old.name ~= name then
       error(string.format("channel change after reconnecting: %s -> %s", old.name, name), 0)
     end
+    old:reconnected()
     return
   end
   if self.channels[name] and self.channels[name].id ~= id then
@@ -125,6 +126,10 @@ function CT._default:setup(data)
   return self.sepack:setup(self, data)
 end
 
+function CT._default:reconnected()
+  -- no sane defaults
+end
+
 function CT._default:xchg(data)
   self:write(data, 0)
   local r = self:recv()
@@ -157,10 +162,15 @@ CT.control.__tostring = CT._default.__tostring
 CT.uart = O(CT._default)
 
 function CT.uart:setup(baud, bits, parity, stopbits)
-  bits = bits or 8
-  parity = parity or 'N'
-  stopbits = stopbits or 1
-  return checkerr(self.sepack:setup(self, B.flat{'s', B.enc32BE(baud), bits, parity, stopbits}))
+  self.baud = baud
+  self.bits = bits or 8
+  self.parity = parity or 'N'
+  self.stopbits = stopbits or 1
+  return checkerr(self.sepack:setup(self, B.flat{'s', B.enc32BE(self.baud), self.bits, self.parity, self.stopbits}))
+end
+
+function CT.uart:reconnected()
+  return checkerr(self.sepack:setup(self, B.flat{'s', B.enc32BE(self.baud), self.bits, self.parity, self.stopbits}))
 end
 
 do
