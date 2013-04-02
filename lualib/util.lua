@@ -1,5 +1,7 @@
 local Pretty = require'interactive'
 local B = require'binary'
+local T = require'thread'
+local O = require'o'
 local M = {}
 
 --: ANSI terminal colors and other goodies
@@ -63,9 +65,74 @@ else
   end
 end
 
+
+
+local logger = O()
+
+makelogger = O.constructor(function (self, name)
+  self.name = name
+end)
+
+function logger:sub(name)
+  assert(name, 'subloggers need a name')
+  if self.name then
+    makelogger(logger, self.name..'.'..name)
+  else
+    makelogger(logger, name)
+  end
+end
+
+-- function logger:__call(color, ...)
+--   return function (...)
+--     local args = ""
+--     if select('#', ...) > 0 then
+--       args = (msg and " " or "") .. p:format (...)
+--     end
+--     local t = color (c) .. (msg or '') .. args .. color'norm' .. (nonl and '' or '\n')
+--     file:write (t)
+--     return ...
+--   end
+--   D(self.name)(...)
+--   return ...
+-- end
+
+function logger:log(...)
+  return self(...)
+end
+
+function logger:clog(color, ...)
+  D(color)(self.name)(...)
+  return ...
+end
+
+function logger:info(...)
+  D'cyan'(self.name)(...)
+  return ...
+end
+
+function logger:warning(...)
+  D'red'(self.name)(...)
+  return ...
+end
+
+function logger:error(...)
+  D'redb'(self.name)(...)
+  return ...
+end
+
+local mainlogger = makelogger(logger)
+local loggers = {}
+
+local function getlogger()
+  -- return loggers[T.current()] or mainlogger
+  return io.stderr
+end
+
+
+
 local function D(c)
   return function (msg, nonl, file)
-    file = file or io.stderr
+    file = file or getlogger()
     return function (...)
       local args = ""
       if select('#', ...) > 0 then
@@ -78,10 +145,20 @@ local function D(c)
   end
 end
 
-local function __index (self, color)
-  if colors[color] then
-    self[color] = D(color)
-    return self[color]
+-- local old_print = print
+-- function print(...)
+--   D'norm'()(...)
+-- end
+
+
+
+local function __index (self, name)
+  if name == 'log' then
+    return getlogger()
+  end
+  if colors[name] then
+    self[name] = D(name)
+    return self[name]
   end
 end
 
