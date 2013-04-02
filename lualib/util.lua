@@ -90,7 +90,7 @@ local function __call (self, ...)
 end
 
 do
-  pcall (function () require 'luarocks.loader' end)
+  --pcall (function () require 'luarocks.loader' end)
   local socket = require'socket'
   local names = {}
   local times = {}
