@@ -23,7 +23,17 @@ local function drop_arguments(n)
   end
 end
 
-if arg[1] then
+if os.basename(arg[0]) ~= "thb" and os.basename(arg[0]) ~= "thb.exe" then
+  os.program_path = os.dirname(os.realpath(arg[0]))
+  addtoPATH(os.program_path)
+  function main()
+    local name = arg[0]
+    if name:endswith".exe" then
+      name = name:sub(1, -5)
+    end
+    dofile(name..'.lua')
+  end
+elseif arg[1] then
   if string.sub(arg[1], 1, 1) == ':' then
     arg[1] = os.executable_dir..'/'..string.sub(arg[1], 2)..'.lua'
   else
@@ -37,24 +47,12 @@ if arg[1] then
     dofile(arg[0])
   end
 else
-  if os.basename(arg[0]) ~= "thb" and os.basename(arg[0]) ~= "thb.exe" then
-    os.program_path = os.dirname(os.realpath(arg[0]))
-    addtoPATH(os.program_path)
-    function main()
-      local name = arg[0]
-      if name:endswith".exe" then
-        name = name:sub(1, -5)
-      end
-      dofile(name..'.lua')
-    end
-  else
-    function main()
-      addtoPATH('.')
-      local repl = require'repl'
-      local loop = require'loop'
-      repl.start(0)
-      loop.run()
-    end
+  function main()
+    addtoPATH('.')
+    local repl = require'repl'
+    local loop = require'loop'
+    repl.start(0)
+    loop.run()
   end
 end
 
