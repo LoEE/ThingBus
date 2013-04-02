@@ -1,6 +1,5 @@
 require 'coxpcall'
 local Object = require'oo'
-local D = require'util'
 local socket = require'socket'
 
 local create = coroutine.create
@@ -370,7 +369,7 @@ local function apply (mbox, fun, ...)
     return mbox:put(Thread.pcall(fun, ...))
   else
     local ok, err = Thread.xpcall(fun, debug.traceback, ...)
-    if not ok then D.red'cast error:'(D.unq(err)) end
+    if not ok then print('cast error:', err) end
   end
 end
 
@@ -434,7 +433,6 @@ function Publisher.subscribe (self)
   local m = Mailbox:new()
   self[#self+1] = m
   if self.current ~= nil then
-    D.cyan'send cur to new sub'(unpack(self.current))
     m:put(unpack(self.current))
   end
   return m
