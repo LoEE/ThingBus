@@ -348,6 +348,12 @@ function CT.gpio:init()
   return result
 end
 
+function CT.gpio:alias(old, new)
+  self:_getpin(old)
+  assert(not self.pins[new], "gpio pin name in use")
+  self.pins[new] = self.pins[old]
+end
+
 function CT.gpio:_getpin(name)
   local pin = self.pins[name]
   if type(pin) ~= 'number' then error('unknown gpio pin: '..name) end
