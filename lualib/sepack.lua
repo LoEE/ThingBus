@@ -33,6 +33,12 @@ Sepack.new = O.constructor(function (self, ext, log)
   T.go(self._in_loop, self)
 end)
 
+function Sepack:mixinChannelTypes(channeltypes)
+  local class = O(Sepack)
+  class.channeltypes = channeltypes
+  return class
+end
+
 function Sepack:_enumerate()
   self:_addchn(0, 'control')
   for i, name in ipairs(self.channels.control.channel_names) do
