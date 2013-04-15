@@ -231,14 +231,8 @@ do
     end
   end
 
-  function chainer:_getpin(name)
-    local pin = self.gpio.pins[name]
-    if type(pin) ~= 'number' then error('unknown gpio pin: '..name) end
-    return string.char(pin)
-  end
-
   function chainer:setup(name, mode, ...)
-    local pin = self:_getpin(name)
+    local pin = self.gpio:_getpin(name)
     local pull = 'up'
     local hyst = true
     for i=1,select('#', ...) do
@@ -291,14 +285,14 @@ do
   function chainer:read(name, key)
     if not key then key = name end
     self.rets[#self.rets+1] = key
-    self:push('r', self:_getpin(name))
+    self:push('r', self.gpio:_getpin(name))
     return self
   end
 
   function chainer:write(name, v)
     local cmd
     if v then cmd = '1' else cmd = '0' end
-    self:push(cmd, self:_getpin(name))
+    self:push(cmd, self.gpio:_getpin(name))
     return self
   end
 
@@ -346,6 +340,12 @@ function CT.gpio:init()
   end
   self.pins = result
   return result
+end
+
+function CT.gpio:_getpin(name)
+  local pin = self.pins[name]
+  if type(pin) ~= 'number' then error('unknown gpio pin: '..name) end
+  return string.char(pin)
 end
 
 function CT.gpio:seq()
