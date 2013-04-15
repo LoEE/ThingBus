@@ -333,6 +333,25 @@ do
   CT.gpio._chainer = chainer
 end
 
+do
+  local pin = O()
+
+  pin.new = O.constructor(function (self, gpio, name)
+    self.gpio = gpio
+    self.name = name
+  end)
+
+  for _,method in ipairs{'setup', 'output', 'input', 'flaot', 'peripheral',
+                         'read', 'write', 'hi', 'lo', } do
+    pin[method] = function (self, ...)
+      local seq = gpio:seq()
+      seq[method](seq, self.name, ...)
+      return seq:run()
+    end
+  end
+  CT.gpio._pin = pin
+end
+
 function CT.gpio:init()
   local pins = self.sepack:setup(self):split(' ')
   result = {}
@@ -362,6 +381,11 @@ end
 
 function CT.gpio:seq()
   return self._chainer:new(self)
+end
+
+function CT.gpio:pin(name)
+  self:_getpin(name)
+  return self._pin:new(self, name)
 end
 
 CT.gpio.__tostring = CT._default.__tostring
