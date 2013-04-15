@@ -18,14 +18,6 @@ local function hex_trunc (data, maxlen)
   end
 end
 
-local function checkerr(data)
-  if string.byte(data, 1) == 0 then
-    return error(string.sub(data, 2))
-  end
-  return string.sub(data, 2)
-end
-
-
 
 -- main class:
 local Sepack = O()
@@ -161,16 +153,24 @@ CT.control.__tostring = CT._default.__tostring
 
 CT.uart = O(CT._default)
 
+function CT.uart:init()
+  self.last_timeouts = {}
+end
+
 function CT.uart:setup(baud, bits, parity, stopbits)
   self.baud = baud
   self.bits = bits or 8
   self.parity = parity or 'N'
   self.stopbits = stopbits or 1
-  return checkerr(self.sepack:setup(self, B.flat{'s', B.enc32BE(self.baud), self.bits, self.parity, self.stopbits}))
+  self.last_setup = B.flat{'s', B.enc32BE(self.baud), self.bits, self.parity, self.stopbits}
+  return self.sepack:setup(self, self.last_setup)
 end
 
 function CT.uart:reconnected()
-  return checkerr(self.sepack:setup(self, B.flat{'s', B.enc32BE(self.baud), self.bits, self.parity, self.stopbits}))
+  self.sepack:setup(self, self.last_setup)
+  for type,ms in pairs(self.last_timeouts) do
+    self:settimeout(type, ms)
+  end
 end
 
 do
@@ -182,6 +182,7 @@ do
   function CT.uart:settimeout(type, ms)
     local t = timeouts[type]
     if not t then error('invalid timeout type: '..type) end
+    self.last_timeouts[type] = ms
     return self.sepack:setup(self, B.flat{t, B.enc16BE(ms * 10)})
   end
 end
@@ -385,12 +386,12 @@ CT.notify.__tostring = CT._default.__tostring
 CT.adc = O(CT._default)
 
 function CT.adc:start(fs)
-  local reply = checkerr(self.sepack:setup(self, B.enc32BE(fs)))
+  local reply = self.sepack:setup(self, B.enc32BE(fs))
   return B.dec32BE(reply) / 256
 end
 
 function CT.adc:stop()
-  checkerr(self.sepack:setup(self, B.enc32BE(0)))
+  self.sepack:setup(self, B.enc32BE(0))
 end
 
 function CT.adc:_decode(data)
@@ -467,9 +468,16 @@ do
   end
 end
 
+local function checkerr(data)
+  if string.byte(data, 1) == 0 then
+    return error(string.sub(data, 2))
+  end
+  return string.sub(data, 2)
+end
+
 function Sepack:setup (channel, data)
   data = data or ''
-  return self:chn'control':xchg(string.char(channel.id)..data)
+  return checkerr(self:chn'control':xchg(string.char(channel.id)..data))
 end
 
 return Sepack
