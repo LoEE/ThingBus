@@ -1,5 +1,25 @@
 local M = require'_binary'
 
+function M.packbits(obj, fmt)
+  local result = 0
+  local parts = string.split(fmt)
+  for _,part in ipairs(parts) do
+    local name, len = string.match(part, '([^:]+):([0-9]+)')
+    if not name then
+      result = bit32.lshift(result, 1)
+      if part ~= '_' then
+        result = result + (obj[part] and 1 or 0)
+      end
+    else
+      result = bit32.lshift(result, len)
+      if name ~= '_' then
+        result = result + obj[name]
+      end
+    end
+  end
+  return result
+end
+
 local sub = string.sub
 
 function M.allslices (s, e, size)
