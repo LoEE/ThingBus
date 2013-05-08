@@ -341,10 +341,14 @@ do
     self.name = name
   end)
 
-  for _,method in ipairs{'setup', 'output', 'input', 'flaot', 'peripheral',
-                         'read', 'write', 'hi', 'lo', } do
+  function pin:read()
+    return self.gpio:seq():read(self.name):run()[self.name]
+  end
+
+  for _,method in ipairs{'setup', 'output', 'input', 'float', 'peripheral',
+                         'write', 'hi', 'lo', } do
     pin[method] = function (self, ...)
-      local seq = gpio:seq()
+      local seq = self.gpio:seq()
       seq[method](seq, self.name, ...)
       return seq:run()
     end
