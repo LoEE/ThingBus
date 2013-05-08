@@ -11,7 +11,7 @@ if [ "$HOST" = "" -o "$ARCH" = "" ]; then
 	exit 1
 fi
 
-rsync -avzP --exclude='.*' --exclude='/thb-*' --exclude=/install/ . ${HOST}:$HOSTDIR/ThingBus/
-ssh $HOST "cd $HOSTDIR/ThingBus && make install/$ARCH"
+rsync -avzP --exclude='.*' --exclude='/thb-*' --exclude=/install/ --delete --delete-excluded . ${HOST}:$HOSTDIR/ThingBus/
+ssh -t $HOST "cd $HOSTDIR/ThingBus && make install/$ARCH"
 rsync -avzP ${HOST}:$HOSTDIR/ThingBus/install/$ARCH install/
 rsync -avzP ${HOST}:$HOSTDIR/ThingBus/"thb-$ARCH*" .
