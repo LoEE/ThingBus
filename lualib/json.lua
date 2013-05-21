@@ -135,7 +135,11 @@ function simplesave(o, buffer)
 	elseif t == "string" then
 		stringsave(o, buffer);
 	elseif t == "table" then
-		tablesave(o, buffer);
+		if getmetatable(o) then
+			stringsave(tostring(o), buffer)
+		else
+			tablesave(o, buffer);
+		end
 	elseif t == "boolean" then
 		t_insert(buffer, (o and "true" or "false"));
 	else
