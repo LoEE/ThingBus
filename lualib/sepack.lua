@@ -18,6 +18,13 @@ local function hex_trunc (data, maxlen)
   end
 end
 
+local function checkerr(data)
+  if string.byte(data, 1) == 0 then
+    return error(string.sub(data, 2))
+  end
+  return string.sub(data, 2)
+end
+
 
 -- main class:
 local Sepack = O()
@@ -121,7 +128,7 @@ function CT._default:write(data, flags)
 end
 
 function CT._default:setup(data)
-  return self.sepack:setup(self, data)
+  return checkerr(self.sepack:setup(self, data))
 end
 
 function CT._default:reconnected()
@@ -169,11 +176,11 @@ function CT.uart:setup(baud, bits, parity, stopbits)
   self.parity = parity or 'N'
   self.stopbits = stopbits or 1
   self.last_setup = B.flat{'s', B.enc32BE(self.baud), self.bits, self.parity, self.stopbits}
-  return self.sepack:setup(self, self.last_setup)
+  checkerr(self.sepack:setup(self, self.last_setup))
 end
 
 function CT.uart:reconnected()
-  self.sepack:setup(self, self.last_setup)
+  checkerr(self.sepack:setup(self, self.last_setup))
   for type,ms in pairs(self.last_timeouts) do
     self:settimeout(type, ms)
   end
@@ -189,7 +196,7 @@ do
     local t = timeouts[type]
     if not t then error('invalid timeout type: '..type) end
     self.last_timeouts[type] = ms
-    return self.sepack:setup(self, B.flat{t, B.enc16BE(ms * 10)})
+    checkerr(self.sepack:setup(self, B.flat{t, B.enc16BE(ms * 10)}))
   end
 end
 
@@ -418,7 +425,7 @@ end
 
 function CT.notify:setdebounce(name, ms)
   local pin = self:_getpin(name)
-  self.sepack:setup(self, 't'..pin..B.enc16BE(ms))
+  checkerr(self.sepack:setup(self, 't'..pin..B.enc16BE(ms)))
 end
 
 CT.notify.__tostring = CT._default.__tostring
@@ -426,12 +433,12 @@ CT.notify.__tostring = CT._default.__tostring
 CT.adc = O(CT._default)
 
 function CT.adc:start(fs)
-  local reply = self.sepack:setup(self, B.enc32BE(fs))
+  local reply = checkerr(self.sepack:setup(self, B.enc32BE(fs)))
   return B.dec32BE(reply) / 256
 end
 
 function CT.adc:stop()
-  self.sepack:setup(self, B.enc32BE(0))
+  checkerr(self.sepack:setup(self, B.enc32BE(0)))
 end
 
 function CT.adc:_decode(data)
@@ -508,16 +515,9 @@ do
   end
 end
 
-local function checkerr(data)
-  if string.byte(data, 1) == 0 then
-    return error(string.sub(data, 2))
-  end
-  return string.sub(data, 2)
-end
-
 function Sepack:setup (channel, data)
   data = data or ''
-  return checkerr(self:chn'control':xchg(string.char(channel.id)..data))
+  return self:chn'control':xchg(string.char(channel.id)..data)
 end
 
 return Sepack
