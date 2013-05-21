@@ -127,6 +127,10 @@ function WebSocket:sendText(data)
   self.outbox:put{ opcode = 'Text', data = data }
 end
 
+function WebSocket:sendBinary(data)
+  self.outbox:put{ opcode = 'Binary', data = data }
+end
+
 function M.WebSocketHandler(proc, acceptor)
   return function (req)
     local accept_result = not acceptor or acceptor(req)
