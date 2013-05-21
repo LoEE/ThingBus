@@ -143,7 +143,7 @@ Thread.setname = setname
 
 local function getname (thd)
   if not thd then thd = current() end
-  return thread_names[thd] or tostring(thd)
+  return thread_names[thd] or ('<'..tostring(thd)..'>')
 end
 Thread.getname = getname
 
