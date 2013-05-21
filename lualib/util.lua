@@ -67,88 +67,107 @@ end
 
 
 
-local logger = O()
+local LEVEL_COLORS = {
+  dbg = 'norm',
+  log = 'blue',
+  info = 'cyan',
+  warn = 'red',
+  err = 'redb',
+}
+local function stderr_sink(enabled, name, level, msg, ...)
+  if not enabled then return end
+  if LEVEL_COLORS[level] and level ~= 'warn' and level ~= 'err' then return end
+  -- print(p:format(name, level, msg, ...))
+  local c = LEVEL_COLORS[level] or level
+  local msg = name..'\t'..msg
+  local args
+  if select('#', ...) > 0 then
+    args = p:format (...)
+  else
+    args = ""
+  end
+  io.stderr:write (color(c)..msg..' '..args..color('norm')..'\n')
+end
+
+
+
+local Logger = O()
 
 makelogger = O.constructor(function (self, name)
   self.name = name
+  self.enabled = true
 end)
+local logger = makelogger(Logger)
+_G.log = logger
 
-function logger:sub(name)
-  assert(name, 'subloggers need a name')
+logger.null = makelogger(Logger)
+logger.null.stream = T.Publisher:new()
+logger.null.stdsink = function () end
+
+Logger.__type = "logger"
+Logger.stream = T.Publisher:new()
+Logger.stdsink = stderr_sink
+
+function Logger:sub(name)
+  checks('logger', 'string')
   if self.name then
-    makelogger(logger, self.name..'.'..name)
+    return makelogger(Logger, self.name..'.'..name)
   else
-    makelogger(logger, name)
+    return makelogger(Logger, name)
   end
 end
 
--- function logger:__call(color, ...)
---   return function (...)
---     local args = ""
---     if select('#', ...) > 0 then
---       args = (msg and " " or "") .. p:format (...)
---     end
---     local t = color (c) .. (msg or '') .. args .. color'norm' .. (nonl and '' or '\n')
---     file:write (t)
---     return ...
---   end
---   D(self.name)(...)
---   return ...
--- end
-
-function logger:log(...)
-  return self(...)
+function Logger:off()
+  self.enabled = false
+  return self
 end
 
-function logger:clog(color, ...)
-  D(color)(self.name)(...)
+function Logger:_put(name, level, msg, ...)
+  self.stdsink(self.enabled, name, level, msg, ...)
+  self.stream:publish(self.enabled, name, level, msg, ...)
+end
+
+function Logger:__call(level, msg, ...)
+  checks('logger', 'string', 'string')
+  self.stdsink(self.enabled, self.name, level, msg, ...)
+  self.stream:publish(self.enabled, self.name, level, msg, ...)
   return ...
 end
 
-function logger:info(...)
-  D'cyan'(self.name)(...)
-  return ...
+function Logger:log(msg, ...)
+  return self('log', msg, ...)
 end
 
-function logger:warning(...)
-  D'red'(self.name)(...)
-  return ...
+function Logger:write(msg, ...)
+  return self('log', msg, ...)
 end
 
-function logger:error(...)
-  D'redb'(self.name)(...)
-  return ...
+function Logger:dbg(msg, ...)
+  return self('dbg', msg, ...)
 end
 
-local mainlogger = makelogger(logger)
-local loggers = {}
+function Logger:info(msg, ...)
+  return self('info', msg, ...)
+end
 
-local function getlogger()
-  -- return loggers[T.current()] or mainlogger
-  return io.stderr
+function Logger:warn(msg, ...)
+  return self('warn', msg, ...)
+end
+
+function Logger:error(msg, ...)
+  return self('err', msg, ...)
 end
 
 
 
 local function D(c)
-  return function (msg, nonl, file)
-    file = file or getlogger()
+  return function (msg)
     return function (...)
-      local args = ""
-      if select('#', ...) > 0 then
-        args = (msg and " " or "") .. p:format (...)
-      end
-      local t = color (c) .. (msg or '') .. args .. color'norm' .. (nonl and '' or '\n')
-      file:write (t)
+      logger:_put(T.getname(), c, msg, ...)
       return ...
     end
   end
 end
-
--- local old_print = print
--- function print(...)
---   D'norm'()(...)
--- end
 
 
 
