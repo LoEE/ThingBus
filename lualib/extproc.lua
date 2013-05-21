@@ -17,8 +17,8 @@ elseif os.platform == 'win32' then
   ExtProc.usb_exe = os.executable_dir..'/sepack-hid-win32.exe'
 end
 
-function ExtProc:init (args, log)
-  self.log = log
+function ExtProc:init (args, _log)
+  self.log = _log or log.null
 
   local lsock, err = assert(socket.bind ('127.0.0.1', 0))
   lsock:settimeout (0)
@@ -55,10 +55,10 @@ function ExtProc:_start_loop()
   local cmd = table.concat(self.args, ' ')
   while true do
     local timeout = T.Timeout:new(self.respawn_period)
-    if self.log then self.log:write("executing: "..cmd.."\n") end
+    self.log:info("exec", cmd)
     self.exitbox = T.Mailbox:new()
     self.procin, err = io.popen(cmd, "w")
-    if not self.procin then self.log:write('E', ' ', err, '\n') end
+    if not self.procin then self.log:error("exec failed", D.unq(err)) end
     self.exitbox:recv()
     self.exitbox = nil
     timeout:recv()
@@ -108,18 +108,18 @@ function ExtProc:_in_loop(infd)
   while true do
     local data, cmd, err = self.read_message(inb)
     if data then
-      if self.log then self.log:write('<', string.format(' %s : %s', B.bin2hex(data), D.repr(data)), '\n') end
+      self.log:dbg('< '..string.format('%s : %s', B.bin2hex(data), D.repr(data)))
       self.inbox:put(data)
     elseif cmd then
-      if self.log then self.log:write('?', ' ', cmd, '\n') end
+      self.log:dbg('? '..cmd)
       self.statbox:put(cmd)
     else
       if err == 'eof' then
-        if self.log then self.log:write('?', ' exit\n') end
+        self.log:dbg('< eof')
         self.statbox:put(false)
         break
       else
-        if self.log then self.log:write('E', ' ', err, '\n') end
+        self.log:error('input error', err)
         break
       end
     end
@@ -132,7 +132,7 @@ function ExtProc:_out_loop()
   while true do
     local data = self.outbox:recv()
     assert(type(data) == 'string', 'data is not a string')
-    if self.log then self.log:write('>', string.format(' %s : %s', B.bin2hex(data), D.repr(data)), '\n') end
+    self.log:dbg('> '..string.format('%s : %s', B.bin2hex(data), D.repr(data)))
     if self.outfd then loop.write(self.outfd, table.concat{ "tx ", #data, "\n", data, "\n" }) end
   end
 end

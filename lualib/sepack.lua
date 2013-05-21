@@ -30,9 +30,9 @@ end
 -- main class:
 local Sepack = O()
 
-Sepack.new = O.constructor(function (self, ext, log)
+Sepack.new = O.constructor(function (self, ext, _log)
   self.verbose = 2
-  self.log = log
+  self.log = _log or log.null
   self.ext = ext
   self.statbox = T.Mailbox:new()
   self.channels = {}
