@@ -52,7 +52,7 @@ function Sepack:_enumerate()
   for i, name in ipairs(self.channels.control.channel_names) do
     self:_addchn(i, name)
   end
-  if self.verbose > 0 then D.green'÷ ready'() end
+  if self.verbose > 0 then self.log:green'÷ ready' end
   self.statbox:put('ready')
 end
 
@@ -106,11 +106,11 @@ do
   function Sepack:_in_loop ()
     while true do
       local p = self.ext.inbox:recv()
-      if self.verbose > 2 then D.cyan(string.format('<<[%d]', #p))(hex_trunc(p, 20)) end
+      if self.verbose > 2 then self.log:cyan(string.format('<<[%d]', #p), hex_trunc(p, 20)) end
       while #p > 0 do
         local id, data, flags, final, rest = parse_packet(p)
         local channel = self.channels[id]
-        if self.verbose > 1 or not channel then D.green(string.format('<%s%s:%x', channel and channel.name or 'ch?', final and "" or "+", flags))(D.hex(data)) end
+        if self.verbose > 1 or not channel then self.log:green(string.format('<%s%s:%x', channel and channel.name or 'ch?', final and "" or "+", flags), D.hex(data)) end
         if channel then
           channel.bytes_received = (channel.bytes_received or 0) + #data
           channel:_handle_rx(data, flags, final)
@@ -142,11 +142,11 @@ do
   end
 
   function Sepack:write (channel, data, flags)
-    if self.verbose > 1 then D.green(string.format ("%s:%x>", channel.name, flags or 0))(D.hex(data)) end
+    if self.verbose > 1 then self.log:green(string.format ("%s:%x>", channel.name, flags or 0), D.hex(data)) end
     while #data > 0 do
       local final = #data <= 62
       local p = format_packet(channel.id, data:sub(1,62), flags, final)
-      if self.verbose > 2 then D.cyan(string.format('>>[%d]', #p))(hex_trunc(p, 20)) end
+      if self.verbose > 2 then self.log:cyan(string.format('>>[%d]', #p), hex_trunc(p, 20)) end
       self.ext.outbox:put(p)
       data = data:sub(63)
     end
