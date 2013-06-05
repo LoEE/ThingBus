@@ -92,12 +92,14 @@ end
 
 
 local Logger = O()
+Logger.loggers = {}
 
 makelogger = O.constructor(function (self, name)
   self.name = name
   self.enabled = true
+  if name then self.loggers[name] = self end
 end)
-local logger = makelogger(Logger)
+local logger = makelogger(Logger, false)
 _G.log = logger
 
 logger.null = makelogger(Logger)
@@ -158,6 +160,18 @@ function Logger:error(msg, ...)
   return self('err', msg, ...)
 end
 
+local Logger_mt = {}
+setmetatable(Logger, Logger_mt)
+
+function Logger_mt.__index(self, name)
+  if colors[name] then
+    self[name] = function (self, msg, ...)
+      return self(name, msg, ...)
+    end
+    return self[name]
+  end
+end
+
 
 
 local function D(c)
@@ -172,9 +186,6 @@ end
 
 
 local function __index (self, name)
-  if name == 'log' then
-    return getlogger()
-  end
   if colors[name] then
     self[name] = D(name)
     return self[name]
