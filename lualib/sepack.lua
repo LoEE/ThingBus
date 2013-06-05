@@ -83,6 +83,71 @@ function Sepack:chn(name)
   return chn
 end
 
+do
+  local function parse_packet(p)
+    local head = p:byte(1)
+    local id = bit.extract (head, 0, 4)
+    local final = bit.extract (head, 4) == 0
+    local flags = bit.extract (head, 5, 3)
+    local len = p:byte(2)
+    local data = p:sub(3, 3+len-1)
+    return id, data, flags, final, p:sub(3+len)
+  end
+
+  function Sepack:_in_loop ()
+    while true do
+      local p = self.ext.inbox:recv()
+      if self.verbose > 2 then D.cyan(string.format('<<[%d]', #p))(hex_trunc(p, 20)) end
+      while #p > 0 do
+        local id, data, flags, final, rest = parse_packet(p)
+        local channel = self.channels[id]
+        if self.verbose > 1 or not channel then D.green(string.format('<%s%s:%x', channel and channel.name or 'ch?', final and "" or "+", flags))(D.hex(data)) end
+        if channel then
+          channel.bytes_received = (channel.bytes_received or 0) + #data
+          channel:_push_rx(data, flags, final)
+        end
+        p = rest
+      end
+    end
+  end
+end
+
+function Sepack:_stat_loop()
+  while true do
+    local status = self.ext.statbox:recv()
+    if status == 'connect' then
+      self:_enumerate()
+    else
+      self.statbox:put(status)
+    end
+  end
+end
+
+do
+  local function format_packet(id, data, flags, final)
+    flags = (flags or 0) * 2
+    if not final then flags = flags + 1 end
+    return string.char(id + (flags * 16), #data)..data
+  end
+
+  function Sepack:write (channel, data, flags)
+    if self.verbose > 1 then D.green(string.format ("%s:%x>", channel.name, flags or 0))(D.hex(data)) end
+    while #data > 0 do
+      local final = #data <= 62
+      local p = format_packet(channel.id, data, flags, final)
+      if self.verbose > 2 then D.cyan(string.format('>>[%d]', #p))(hex_trunc(p, 20)) end
+      self.ext.outbox:put(p)
+      data = data:sub(63)
+    end
+  end
+end
+
+function Sepack:setup (channel, data)
+  data = data or ''
+  return self:chn'control':xchg(string.char(channel.id)..data)
+end
+
+
 
 local CT = {}
 Sepack.channeltypes = CT
@@ -455,69 +520,5 @@ end
 CT.adc.__tostring = CT._default.__tostring
 
 
-
-do
-  local function parse_packet(p)
-    local head = p:byte(1)
-    local id = bit.extract (head, 0, 4)
-    local final = bit.extract (head, 4) == 0
-    local flags = bit.extract (head, 5, 3)
-    local len = p:byte(2)
-    local data = p:sub(3, 3+len-1)
-    return id, data, flags, final, p:sub(3+len)
-  end
-
-  function Sepack:_in_loop ()
-    while true do
-      local p = self.ext.inbox:recv()
-      if self.verbose > 2 then D.cyan(string.format('<<[%d]', #p))(hex_trunc(p, 20)) end
-      while #p > 0 do
-        local id, data, flags, final, rest = parse_packet(p)
-        local channel = self.channels[id]
-        if self.verbose > 1 or not channel then D.green(string.format('<%s%s:%x', channel and channel.name or 'ch?', final and "" or "+", flags))(D.hex(data)) end
-        if channel then
-          channel.bytes_received = (channel.bytes_received or 0) + #data
-          channel:_push_rx(data, flags, final)
-        end
-        p = rest
-      end
-    end
-  end
-end
-
-function Sepack:_stat_loop()
-  while true do
-    local status = self.ext.statbox:recv()
-    if status == 'connect' then
-      self:_enumerate()
-    else
-      self.statbox:put(status)
-    end
-  end
-end
-
-do
-  local function format_packet(id, data, flags, final)
-    flags = (flags or 0) * 2
-    if not final then flags = flags + 1 end
-    return string.char(id + (flags * 16), #data)..data
-  end
-
-  function Sepack:write (channel, data, flags)
-    if self.verbose > 1 then D.green(string.format ("%s:%x>", channel.name, flags or 0))(D.hex(data)) end
-    while #data > 0 do
-      local final = #data <= 62
-      local p = format_packet(channel.id, data, flags, final)
-      if self.verbose > 2 then D.cyan(string.format('>>[%d]', #p))(hex_trunc(p, 20)) end
-      self.ext.outbox:put(p)
-      data = data:sub(63)
-    end
-  end
-end
-
-function Sepack:setup (channel, data)
-  data = data or ''
-  return self:chn'control':xchg(string.char(channel.id)..data)
-end
 
 return Sepack
