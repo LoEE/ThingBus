@@ -19,8 +19,9 @@ local function hex_trunc (data, maxlen)
 end
 
 local function checkerr(data)
+  if #data == 0 then error("eof") end
   if string.byte(data, 1) == 0 then
-    return error(string.sub(data, 2))
+    error(string.sub(data, 2))
   end
   return string.sub(data, 2)
 end
@@ -53,6 +54,12 @@ function Sepack:_enumerate()
   end
   if self.verbose > 0 then D.green'÷ ready'() end
   self.statbox:put('ready')
+end
+
+function Sepack:_disconnected()
+  for id, chn in ipairs(self.channels) do
+    if type(id) == "string" then chn:disconnected() end
+  end
 end
 
 function Sepack:_addchn(id, name)
@@ -118,6 +125,7 @@ function Sepack:_stat_loop()
     if status == 'connect' then
       self:_enumerate()
     else
+      if status == false then self:_disconnected() end
       self.statbox:put(status)
     end
   end
@@ -162,6 +170,7 @@ CT._default.new = O.constructor(function (self, sepack, id, name)
   self.name = name
   self.inbox = T.Mailbox:new()
   self.buffer = {}
+  self.busy = false
 end)
 
 function CT._default:_decode(data)
@@ -196,6 +205,10 @@ function CT._default:setup(data)
   return checkerr(self.sepack:setup(self, data))
 end
 
+function CT._default:disconnected()
+  if self.busy then self.inbox:put("") end
+end
+
 function CT._default:reconnected()
   -- no sane defaults
 end
@@ -207,7 +220,12 @@ function CT._default:xchg(data)
 end
 
 function CT._default:recv()
-  return self.inbox:recv()
+  if self.busy then error("multiple recvs detected on channel: "..self.name) end
+  self.busy = true
+  return (function (...)
+    self.busy = false
+    return ...
+  end)(self.inbox:recv())
 end
 
 function CT._default:__tostring()
