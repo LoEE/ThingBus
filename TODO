@@ -3,15 +3,33 @@ General:
 - object name: the last part is the name passed to constructor,
                previous parts come from dynamic scope
 
-State machines:
-- function decorator (logs state changes, updates the current state observable)
-- handle substates/submachines
-
 Thread:
-- support functions and threads in Source:register_thread
-- resume(function, ...) means T.go(function, ...)
-- short-lived thread name is based on the event source name
 - unify callback_list and nice_list? (spawning threads from functions in nice_list)
-- unbuffered Mailboxes (with blocking writes)
-- optimize Mailbox implementation
 - T.recv introspection (see which thread is blocked on which sources)
+
+Adapters:
+- Channel (wakes up one listener at random)
+- Fanout [async] (wakes up all listeners) (+ store/clear for permanent readiness?)
+- Queue [async] (buffered; wakes up one listener at random)
+- Dispatcher [maybe-async] (creates new listener threads as needed)
+- Mailbox [async] (no free outputs; per-thread queue with selective receive)
+
+Adapter outputs can be associated with:
+- T.recv - to introduce complex logic (T.recv blocks the current thread until one of the sources is ready)
+- function callbacks - to form simple pipelines (only one non-blocking callback at a time; enforced with T.spcall)
+- other adapter inputs - to introduce buffering or fanout
+
+Combos:
+  PubSub: Fanout > 1+ Queues
+  Thread-limited PubSub: Fanout > 1+ Mailbox
+  KVO: value-cell > Fanout (which can be used with callbacks or Queues)
+  Transformers: Source > function > Sink-Source
+  ThreadPool: Channel(buffered) > Dispatcher
+
+
+
+Sepack:
+- channels (and their capabilities: pins and such) avaliable on request, this forms a device specification
+- specifications are validated agains connected devices after filtering them by product-name and serial-number
+- these specifications (and filters) can be introspected so they can be shown to the user
+- per channel "ready" observer for avoiding useless work
