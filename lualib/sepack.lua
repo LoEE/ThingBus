@@ -56,32 +56,34 @@ function Sepack:_enumerate()
   self.statbox:put('ready')
 end
 
-function Sepack:_disconnected()
-  for id, chn in ipairs(self.channels) do
-    if type(id) == "string" then chn:disconnected() end
+function Sepack:on_disconnect()
+  local chns = self.channels
+  for i=0,#chns do
+    chns[i]:on_disconnect()
   end
 end
 
 function Sepack:_addchn(id, name)
-  local old = self.channels[id]
-  if old then
-    if old.name ~= name then
-      error(string.format("channel change after reconnecting: %s -> %s", old.name, name), 0)
+  local chn = self.channels[id]
+  if chn then
+    if chn.name ~= name then
+      error(string.format("channel change after reconnecting: %s -> %s", chn.name, name), 0)
     end
-    old:reconnected()
-    return
+    chn:on_connect()
+  else
+    if self.channels[name] and self.channels[name].id ~= id then
+      error(string.format("duplicate channel name: %s [no. %d and %d]", name, self.channels[name].id, id), 0)
+    end
+    local CT = self.channeltypes._default
+    for k, v in pairs(self.channeltypes) do
+      if string.startswith(name, k) then CT = v break end
+    end
+    chn = CT:new(self, id, name)
+    self.channels[name] = chn
+    self.channels[id] = chn
+    chn:on_connect()
+    chn:init()
   end
-  if self.channels[name] and self.channels[name].id ~= id then
-    error(string.format("duplicate channel name: %s [no. %d and %d]", name, self.channels[name].id, id), 0)
-  end
-  local CT = self.channeltypes._default
-  for k, v in pairs(self.channeltypes) do
-    if string.startswith(name, k) then CT = v break end
-  end
-  local chn = CT:new(self, id, name)
-  self.channels[name] = chn
-  self.channels[id] = chn
-  chn:init()
 end
 
 function Sepack:chn(name)
@@ -111,7 +113,7 @@ do
         if self.verbose > 1 or not channel then D.green(string.format('<%s%s:%x', channel and channel.name or 'ch?', final and "" or "+", flags))(D.hex(data)) end
         if channel then
           channel.bytes_received = (channel.bytes_received or 0) + #data
-          channel:_push_rx(data, flags, final)
+          channel:_handle_rx(data, flags, final)
         end
         p = rest
       end
@@ -122,10 +124,11 @@ end
 function Sepack:_stat_loop()
   while true do
     local status = self.ext.statbox:recv()
+    D.red'status:'(status)
     if status == 'connect' then
       self:_enumerate()
     else
-      if status == false then self:_disconnected() end
+      if status == false then self:on_disconnect() end
       self.statbox:put(status)
     end
   end
@@ -177,19 +180,25 @@ function CT._default:_decode(data)
   return data
 end
 
-function CT._default:_push_rx(data, flags, final)
+function CT._default:_inbox_put(data)
+  self.inbox:put(data)
+end
+
+function CT._default:_handle_rx(data, flags, final)
   local b = self.buffer
+  local r
   if b == false then
-    self.inbox:put(self:_decode(data))
+    r = data
   else
     if b == nil then b = {} self.buffer = b end
     table.insert(b, data)
     if final then
       data = table.concat(b)
       for i=1,#b do b[i] = nil end
-      self.inbox:put(self:_decode(data))
+      r = data
     end
   end
+  if r then self:_inbox_put(self:_decode(r)) end
 end
 
 function CT._default:init()
@@ -205,22 +214,24 @@ function CT._default:setup(data)
   return checkerr(self.sepack:setup(self, data))
 end
 
-function CT._default:disconnected()
+function CT._default:on_connect()
+  self.connected = true
+end
+
+function CT._default:on_disconnect()
+  self.connected = false
   if self.busy then self.inbox:put("") end
 end
 
-function CT._default:reconnected()
-  -- no sane defaults
-end
-
 function CT._default:xchg(data)
+  if not self.connected then return "" end
   self:write(data, 0)
   local r = self:recv()
   return r
 end
 
 function CT._default:recv()
-  if self.busy then error("multiple recvs detected on channel: "..self.name) end
+  if self.busy then error("multiple recvs detected on channel: "..self.name, 1) end
   self.busy = true
   return (function (...)
     self.busy = false
@@ -237,10 +248,39 @@ end
 CT.control = O(CT._default)
 
 function CT.control:init()
+  self.inbox = nil -- only xchg should be used
   local names = self.sepack:setup(self)
   names = string.split(names, ' ')
   table.remove(names, 1) -- drop 'control'
   self.channel_names = names
+end
+
+function CT.control:_inbox_put(data)
+  local chn = table.remove(self.reply_chns, 1)
+  chn:put(data)
+end
+
+function CT.control:on_connect()
+  self.reply_chns = {}
+end
+
+function CT.control:on_disconnect()
+  local rc = self.reply_chns
+  self.reply_chns = nil
+  for i=1,#rc do rc[i]:put("") end
+end
+
+function CT.control:recv()
+  error("only use xchg on the control channel")
+end
+
+function CT.control:xchg(data)
+  local chn = T.Mailbox:new()
+  local rc = self.reply_chns
+  if not rc then return "" end
+  rc[#rc+1] = chn
+  self:write(data, 0)
+  return chn:recv()
 end
 
 CT.control.__tostring = CT._default.__tostring
@@ -262,10 +302,12 @@ function CT.uart:setup(baud, bits, parity, stopbits)
   checkerr(self.sepack:setup(self, self.last_setup))
 end
 
-function CT.uart:reconnected()
-  checkerr(self.sepack:setup(self, self.last_setup))
-  for type,ms in pairs(self.last_timeouts) do
-    self:settimeout(type, ms)
+function CT.uart:on_connect()
+  if self.last_setup then checkerr(self.sepack:setup(self, self.last_setup)) end
+  if self.last_timeouts then
+    for type,ms in pairs(self.last_timeouts) do
+      self:settimeout(type, ms)
+    end
   end
 end
 
