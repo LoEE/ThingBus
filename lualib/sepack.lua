@@ -303,6 +303,7 @@ function CT.uart:setup(baud, bits, parity, stopbits)
 end
 
 function CT.uart:on_connect()
+  CT._default.on_connect(self)
   if self.last_setup then checkerr(self.sepack:setup(self, self.last_setup)) end
   if self.last_timeouts then
     for type,ms in pairs(self.last_timeouts) do
