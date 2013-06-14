@@ -145,7 +145,7 @@ do
     if self.verbose > 1 then D.green(string.format ("%s:%x>", channel.name, flags or 0))(D.hex(data)) end
     while #data > 0 do
       local final = #data <= 62
-      local p = format_packet(channel.id, data, flags, final)
+      local p = format_packet(channel.id, data:sub(1,62), flags, final)
       if self.verbose > 2 then D.cyan(string.format('>>[%d]', #p))(hex_trunc(p, 20)) end
       self.ext.outbox:put(p)
       data = data:sub(63)
