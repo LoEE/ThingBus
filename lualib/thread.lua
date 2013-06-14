@@ -212,6 +212,7 @@ Thread.recvone = recvone
 
 local ThreadMailbox = {}
 Thread.ThreadMailbox = ThreadMailbox
+ThreadMailbox.__type = "ThreadMailbox"
 
 function ThreadMailbox.poll (self)
   local thd = current()
@@ -325,6 +326,7 @@ end
 
 local Mailbox = Source:inherit()
 Thread.Mailbox = Mailbox
+Mailbox.__type = 'Mailbox'
 
 function Mailbox.init (self)
   self.buffer = {}
@@ -400,7 +402,7 @@ function Thread.agent ()
     agent[evsrc] = func
     self(function () end)
   end
-  local mt = {__call = cast, pcall = pcall, call = call, handle = handle}
+  local mt = {__call = cast, pcall = pcall, call = call, handle = handle, __type = "agent" }
   mt.__index = mt
   return setmetatable(agent, mt)
 end
@@ -409,6 +411,7 @@ end
 
 local Broadcast = Source:inherit()
 Thread.Broadcast = Broadcast
+Broadcast.__type = "Broadcast"
 
 function Broadcast:send(...)
   local n = #self
@@ -421,6 +424,7 @@ end
 
 local Publisher = Object:inherit()
 Thread.Publisher = Publisher
+Publisher.__type = "Publisher"
 
 function Publisher.publish (self, ...)
   self.current = {...}
