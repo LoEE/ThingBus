@@ -76,10 +76,10 @@ local LEVEL_COLORS = {
 }
 local function stderr_sink(enabled, name, level, msg, ...)
   if not enabled then return end
-  if LEVEL_COLORS[level] and level ~= 'warn' and level ~= 'err' then return end
-  -- print(p:format(name, level, msg, ...))
+  -- if LEVEL_COLORS[level] and level ~= 'warn' and level ~= 'err' then return end
+  -- print(p:format(enabled, name, level, msg, ...))
   local c = LEVEL_COLORS[level] or level
-  local msg = name..'\t'..msg
+  local msg = (name or '')..'\t'..msg
   local args
   if select('#', ...) > 0 then
     args = p:format (...)
