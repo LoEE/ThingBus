@@ -556,6 +556,7 @@ end
 
 CT.notify.__tostring = CT._default.__tostring
 
+
 CT.adc = O(CT._default)
 
 function CT.adc:start(fs)
@@ -580,6 +581,39 @@ end
 
 CT.adc.__tostring = CT._default.__tostring
 
+
+CT.spi = O(CT._default)
+
+function CT.spi:setup_master(clk, bits, cpol, cpha)
+  self.clk = clk
+  self.bits = bits or 8
+  self.cpol = cpol or 1
+  self.cpha = cpha or 1
+  local new = B.flat{'M', self.bits, self.cpol, self.cpha, B.enc32BE(self.clk)}
+  if new ~= self.last_setup then
+    self.last_setup = new
+    return B.dec32BE(checkerr(self.sepack:setup(self, self.last_setup)))
+  end
+end
+
+function CT.spi:setup_slave(bits, cpol, cpha)
+  self.bits = bits or 8
+  self.cpol = cpol or 1
+  self.cpha = cpha or 1
+  local new = B.flat{'S', self.bits, self.cpol, self.cpha}
+  if new ~= self.last_setup then
+    self.last_setup = new
+    return checkerr(self.sepack:setup(self, self.last_setup))
+  end
+end
+
+function CT.spi:on_connect()
+  CT._default.on_connect(self)
+  if self.last_setup then checkerr(self.sepack:setup(self, self.last_setup)) end
+end
+
+
+CT.spi.__tostring = CT._default.__tostring
 
 
 return Sepack
