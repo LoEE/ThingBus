@@ -45,8 +45,13 @@ local unescapes = {
 	b = "\b", f = "\f", n = "\n", r = "\r", t = "\t"};
 for i=0,31 do
 	local ch = s_char(i);
-	if not escapes[ch] then escapes[ch] = ("\\u%.4X"):format(i); end
+	if not escapes[ch] then escapes[ch] = ("\\u%04x"):format(i); end
 end
+for i=127,255 do
+	local ch = s_char(i);
+	if not escapes[ch] then escapes[ch] = ("\\u%04x"):format(i); end
+end
+
 
 local valid_types = {
 	number  = true,
