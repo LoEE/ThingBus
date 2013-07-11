@@ -79,7 +79,7 @@ local function stderr_sink(enabled, name, level, msg, ...)
   -- if LEVEL_COLORS[level] and level ~= 'warn' and level ~= 'err' then return end
   -- print(p:format(enabled, name, level, msg, ...))
   local c = LEVEL_COLORS[level] or level
-  local msg = (name or '')..'\t'..msg
+  local msg = (name and (name..'\t') or '')..msg
   local args
   if select('#', ...) > 0 then
     args = p:format (...)
@@ -174,10 +174,13 @@ end
 
 
 
+M.prepend_thread_names = true
+
 local function D(c)
   return function (msg)
     return function (...)
-      logger:_put(T.getname(), c, msg, ...)
+      local name = M.prepend_thread_names and T.getname()
+      logger:_put(name, c, msg, ...)
       return ...
     end
   end
