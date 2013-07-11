@@ -1,0 +1,2 @@
+#!/bin/sh
+~/Applications/Android-NDK/android-14-arm/bin/arm-linux-androideabi-strip "$@"
