@@ -66,13 +66,6 @@ int current_ln = -1;
 #include <fcntl.h>
 #include <errno.h>
 
-static int isvalidfd(int fd)
-{
-  return fcntl(fd, F_GETFL) != -1 || errno != EBADF;
-}
-
-#define MEMDBG_FD 4
-
 static void record_line (lua_State *L, lua_Debug *ar)
 {
   lua_gc(L, LUA_GCCOLLECT, 0);
@@ -107,8 +100,9 @@ int main (int argc, char **argv)
 
   lua_State *L;
 #ifndef WIN32
-  if (isvalidfd(MEMDBG_FD)) {
-    FILE *memdbg = fdopen(MEMDBG_FD, "w");
+  char *memdbg_fname = getenv("THB_MEMDBG_FILE");
+  if (memdbg_fname) {
+    FILE *memdbg = fopen(memdbg_fname, "w");
     current_file = "newstate";
     L = lua_newstate(l_dbg_alloc, memdbg);
     current_file = "sethook";
