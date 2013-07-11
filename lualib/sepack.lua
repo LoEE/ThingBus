@@ -540,7 +540,17 @@ function CT.notify:init()
     for _, name in ipairs(names) do result[name] = i-1 end
   end
   self.pins = result
+  self.debouncetimes = {}
   return result
+end
+
+function CT.notify:on_connect()
+  CT._default.on_connect(self)
+  if self.debouncetimes then
+    for name, ms in pairs(self.debouncetimes) do
+      self:setdebounce(name, ms)
+    end
+  end
 end
 
 function CT.notify:_getpin(name)
@@ -552,6 +562,7 @@ end
 function CT.notify:setdebounce(name, ms)
   local pin = self:_getpin(name)
   checkerr(self.sepack:setup(self, 't'..pin..B.enc16BE(ms)))
+  self.debouncetimes[name] = ms
 end
 
 CT.notify.__tostring = CT._default.__tostring
