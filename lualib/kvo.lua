@@ -86,6 +86,7 @@ end
 function Observable:init(init, opts)
   self[_observers] = {}
   self[_value] = init
+  self.version = 0
   if opts then
     self.read = opts.read
     self.write = opts.write
@@ -142,6 +143,7 @@ function Observable:__call(...)
   local old = self[_value]
   if select('#', ...) == 0 then
     if observe_callback then observe_callback(self) end
+    if self.seen then self.seen[T.current()] = self.version end
     if self.read then
       return self:read(old)
     else
@@ -153,9 +155,7 @@ function Observable:__call(...)
         local new = ...
         if old ~= new then
           self[_value] = new
-          for _,fun in ipairs(self[_observers]) do
-            T.queuecall(function () fun(new) end)
-          end
+          self:notify(new)
         end
         return new
       end
@@ -171,12 +171,11 @@ end
 function Observable:rawset(new)
   if new ~= self[_value] then
     self[_value] = new
-    for _,fun in ipairs(self[_observers]) do
-      T.queuecall(function () fun(new) end)
-    end
+    self:notify(new)
   end
 end
 
+-- callback API
 function Observable:watch(fun)
   local o = self[_observers]
   assert(type(fun) == 'function', "function expected")
@@ -192,6 +191,58 @@ function Observable:unwatch(fun)
     end
   end
   return fun
+end
+
+function Observable:notify(new)
+  -- local p = {}
+  -- D'notify request:'(tostring(p), new, self.dirty)
+  if not self.dirty then
+    self.version = self.version + 1
+    local cnew
+    if self.coalescing == false then
+      cnew = new
+    else
+      self.dirty = true
+    end
+    T.queuecall(function ()
+      -- D'notify execution:'(tostring(p), new, cnew, self[_value])
+      self.dirty = nil
+      local new = cnew or self[_value]
+      for _,fun in ipairs(self[_observers]) do
+        T.pcall(fun, new)
+      end
+      local n = #self
+      for i=n,1,-1 do
+        local thd = self[i]
+        if self.version ~= self.seen[thd] then
+          self.seen[thd] = self.version
+          T.resume (thd, self, new)
+        end
+      end
+    end)
+  end
+end
+
+-- thread API
+function Observable:poll()
+  local s = self.seen
+  if not s then s = setmetatable({}, { __mode = 'k' }) self.seen = s end
+  local thd = T.current()
+  if self.version == s[thd] then return false end
+  return true, {self()}
+end
+
+function Observable:recv()
+  return T.recvone(self)
+end
+
+function Observable:register_thread(thd)
+  self[#self+1] = thd
+end
+
+function Observable:unregister_thread(thd)
+  local i = table.index(self, thd)
+  table.remove (self, i)
 end
 
 function Observable:__tostring()
@@ -229,17 +280,11 @@ function ObservableDict:__newindex(k,v)
   local new
   if self.change then new = self:change(k, v) end
   if new == nil then new = v end
-  if new ~= nil and self[_value][k] ~= nil then
-    for _,fun in ipairs(self[_observers]) do
-      T.queuecall(function () fun('del', k) end)
-    end
-  end
+  if new ~= nil and self[_value][k] ~= nil then self:notify('del', k) end
   self[_value][k] = new
   local action
   if v ~= nil then action = 'add' else action = 'del' end
-  for _,fun in ipairs(self[_observers]) do
-    T.queuecall(function () fun(action, k) end)
-  end
+  self:notify(action, k)
 end
 
 function ObservableDict:__call(new)
@@ -256,6 +301,20 @@ ObservableDict.rawset = Observable.rawset
 
 ObservableDict.watch = Observable.watch
 ObservableDict.unwatch = Observable.unwatch
+
+function ObservableDict:notify(action, key)
+  local new = self[_value]
+  self.version = self.version + 1
+  for _,fun in ipairs(self[_observers]) do
+    T.queuecall(function () fun(action, key) end)
+  end
+  local n = #self
+  for i=n,1,-1 do
+    local thd = self[i]
+    self.seen[thd] = self.version
+    T.resume (thd, self, action, key)
+  end
+end
 
 function ObservableDict:__tostring()
   return 'o.Dict('..D.repr(self())..')'
