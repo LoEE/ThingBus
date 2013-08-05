@@ -7,7 +7,7 @@ setmetatable(M, M)
 -- private keys
 local _observers = newproxy()
 local _value = newproxy()
-local onObserve = require'lib.cbstack'()
+local observe_callback = nil
 
 
 
@@ -77,6 +77,7 @@ end
 
 
 local Observable = Class()
+Observable.__type = 'Observable'
 
 function M:__call(...)
   return Observable(...)
@@ -92,10 +93,11 @@ function Observable:init(init, opts)
 end
 
 function Observable:setcomputed(f, write)
-  checks('Observable', 'function', 'function')
-  if write and self.write then error('the observable already has a write callback', 2) end
-  self.write = write
-  write(self())
+  checks('Observable', 'function', '?function')
+  if write then
+    if self.write then error('the observable already has a write callback', 2) end
+    self.write = write
+  end
 
   local weakref = setmetatable({ self }, { __mode = 'v' })
   local dirty = true
@@ -117,9 +119,10 @@ function Observable:setcomputed(f, write)
     dirty = false
     color = not color
     if weakref[1] then
-      onObserve:push(note)
+      local old_oc = observe_callback
+      observe_callback = note
       local new = f()
-      onObserve:pop()
+      observe_callback = old_oc
       weakref[1]:rawset(new)
     end
     for ob,c in pairs(list) do
@@ -138,7 +141,7 @@ end
 function Observable:__call(...)
   local old = self[_value]
   if select('#', ...) == 0 then
-    onObserve(self)
+    if observe_callback then observe_callback(self) end
     if self.read then
       return self:read(old)
     else
@@ -215,7 +218,7 @@ function ObservableDict:init(init, opts)
 end
 
 function ObservableDict:__index(k)
-  onObserve(self, k)
+  if observe_callback then observe_callback(self, k) end
   local v = self[_value][k]
   if v == nil then return getmetatable(self)[k] end
   return v
@@ -241,7 +244,7 @@ end
 
 function ObservableDict:__call(new)
   assert(not new, 'you cannot set ObservableDict value')
-  onObserve(self)
+  if observe_callback then observe_callback(self) end
   local keys = {}
   for k in pairs(self[_value]) do
     keys[#keys+1] = k
@@ -259,7 +262,7 @@ function ObservableDict:__tostring()
 end
 
 function ObservableDict:each()
-  onObserve(self)
+  if observe_callback then observe_callback(self) end
   return next, self[_value], nil
 end
 
@@ -278,12 +281,8 @@ end
 
 function M.computed(f, write)
   local o
-  if write then
-    o = Observable(nil, { write = write })
-  else
-    o = Observable()
-  end
-  return o:setcomputed(f)
+  o = Observable()
+  return o:setcomputed(f, write)
 end
 
 
