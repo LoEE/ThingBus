@@ -12,7 +12,7 @@ local oldcurrent = coroutine.running
 -- we have to resume the coroutine that called pcall and not the inner one.
 local current_thread = nil
 local function current ()
-  return current_thread
+  return current_thread or 'thread: main      '
 end
 
 local Thread = {
@@ -70,6 +70,7 @@ function handle_resume (thd, tstart, ok, ...)
         return resume(thd)
       end
       if #callback_list > 0 then
+        current_thread = 'thread: callback  '
         local l = callback_list
         callback_list = {}
         for i=1,#l do
@@ -81,13 +82,14 @@ function handle_resume (thd, tstart, ok, ...)
         if type(v) == 'thread' then
           return resume (v, Idle)
         elseif type(v) == 'function' then
+          current_thread = 'thread: nice      '
           nice_list[v] = nil
           v()
         else
           break
         end
       end
-      current_thread = nil
+      current_thread = 'thread: main      '
     end
   end
 end
