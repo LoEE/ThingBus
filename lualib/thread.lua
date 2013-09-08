@@ -10,9 +10,9 @@ local oldcurrent = coroutine.running
 -- Make sure we only return threads that we created (resumed).
 -- This is required for recvs inside a coxpcall to work:
 -- we have to resume the coroutine that called pcall and not the inner one.
-local current_thread = nil
+local current_thread = 'thread:       main'
 local function current ()
-  return current_thread or 'thread: main      '
+  return current_thread
 end
 
 local pcall = pcall
@@ -157,7 +157,7 @@ Thread.setname = setname
 
 local function getname (thd)
   if not thd then thd = current() end
-  return thread_names[thd] or ('<'..tostring(thd)..'>')
+  return thread_names[thd] or ('<'..tostring(thd):sub(9)..'>')
 end
 Thread.getname = getname
 
