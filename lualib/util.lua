@@ -82,7 +82,9 @@ local function stderr_sink(enabled, name, level, msg, ...)
   -- if LEVEL_COLORS[level] and level ~= 'warn' and level ~= 'err' then return end
   -- print(p:format(enabled, name, level, msg, ...))
   local c = LEVEL_COLORS[level] or level
-  local msg = (name and (name..'\t') or '')..msg
+  if name then
+    msg = string.format("%12s %s", name, msg)
+  end
   local args
   if select('#', ...) > 0 then
     args = p:format (...)
