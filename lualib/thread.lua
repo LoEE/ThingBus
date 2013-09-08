@@ -15,14 +15,16 @@ local function current ()
   return current_thread or 'thread: main      '
 end
 
+local pcall = pcall
+local xpcall = xpcall
 local Thread = {
   now = socket.gettime,
   create = create,
   current = current,
-  spcall = _G.pcall,
-  sxpcall = _G.xpcall,
-  pcall = _G.copcall,
-  xpcall = _G.coxpcall,
+  spcall = pcall,
+  sxpcall = xpcall,
+  pcall = copcall,
+  xpcall = coxpcall,
   identity = function (...) return ... end,
 }
 _G.pcall = nil
@@ -64,32 +66,42 @@ function handle_resume (thd, tstart, ok, ...)
     if select(1, ...) then
       return resume(...) -- trampoline
     else
-      local thd = next(busy_list)
-      if thd then
-        busy_list[thd] = nil
-        return resume(thd)
-      end
-      if #callback_list > 0 then
-        current_thread = 'thread: callback  '
-        local l = callback_list
-        callback_list = {}
-        for i=1,#l do
-          l[i]()
+      local idle = false
+      while not idle do
+        idle = true
+        local thd = next(busy_list)
+        if thd then
+          busy_list[thd] = nil
+          return resume(thd)
         end
-      end
-      while true do
-        local v = next(nice_list)
-        if type(v) == 'thread' then
-          return resume (v, Idle)
-        elseif type(v) == 'function' then
-          current_thread = 'thread: nice      '
-          nice_list[v] = nil
-          v()
-        else
-          break
+        if #callback_list > 0 then
+          idle = false
+          current_thread = 'thread:   callback'
+          local l = callback_list
+          callback_list = {}
+          for i=1,#l do
+            local ok, err = xpcall(l[i], debug.traceback) if not ok then local here = #debug.traceback() - 16 + 27
+              print("error in queued callback: "..err:sub(1,#err - here))
+              os.exit(2)
+            end
+          end
         end
+        while true do
+          local v = next(nice_list)
+          if type(v) == 'thread' then
+            return resume (v, Idle)
+          elseif type(v) == 'function' then
+            idle = false
+            current_thread = 'thread:       nice'
+            nice_list[v] = nil
+            local ok, err = xpcall(v, debug.traceback)
+            if not ok then print("error in idle callback: "..err) end
+          else
+            break
+          end
+        end
+        current_thread = 'thread:       main'
       end
-      current_thread = 'thread: main      '
     end
   end
 end
