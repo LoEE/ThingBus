@@ -5,6 +5,7 @@ local T = require'thread'
 local B = require'binary'
 local D = require'util'
 local Object = require'oo'
+local o = require'kvo'
 
 local ExtProc = Object:inherit{
   respawn_period = 5,
@@ -37,7 +38,7 @@ function ExtProc:init (args, _log)
 
   self.inbox = T.Mailbox:new()
   self.outbox = T.Mailbox:new()
-  self.statbox = T.Mailbox:new()
+  self.status = o(false)
   T.go(self._out_loop, self)
 
   self.accept_watcher = loop.on_acceptable (lsock, function () T.go(self._handle_connect, self) end, true)
@@ -75,7 +76,7 @@ function ExtProc:_handle_connect()
   local sock = self.lsock:accept()
   sock:settimeout(0)
   self.outfd = sock
-  self.statbox:put(true)
+  self.status(true)
   return self:_in_loop(sock)
 end
 
@@ -112,11 +113,11 @@ function ExtProc:_in_loop(infd)
       self.inbox:put(data)
     elseif cmd then
       self.log:dbg('? '..cmd)
-      self.statbox:put(cmd)
+      self.status(cmd)
     else
       if err == 'eof' then
         self.log:dbg('< eof')
-        self.statbox:put(false)
+        self.status(false)
         break
       else
         self.log:error('input error', err)

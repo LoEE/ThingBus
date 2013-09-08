@@ -2,6 +2,7 @@ local D = require'util'
 local O = require'o'
 local T = require'thread'
 local B = require'binary'
+local o = require'kvo'
 local bit = require'bit32'
 
 
@@ -34,10 +35,10 @@ Sepack.new = O.constructor(function (self, ext, _log)
   self.verbose = 2
   self.log = _log or log.null
   self.ext = ext
-  self.statbox = T.Mailbox:new()
+  self.connected = o()
   self.channels = {}
 
-  T.go(self._stat_loop, self)
+  self.ext.status:watch(function (...) self:_ext_status(...) end)
   T.go(self._in_loop, self)
 end)
 
@@ -47,13 +48,26 @@ function Sepack:mixinChannelTypes(channeltypes)
   return class
 end
 
+function Sepack:_ext_status(status)
+  if status == 'connect' then
+    T.go(self._enumerate, self)
+  elseif status == true then
+  elseif status == 'coldplug end' then
+    self.connected(false)
+  else
+    if self.verbose > 2 then self.log:green('÷ status:', status, self.connected()) end
+    if status == false and self.connected() then self:on_disconnect() end
+    self.connected(false)
+  end
+end
+
 function Sepack:_enumerate()
   self:_addchn(0, 'control')
   for i, name in ipairs(self.channels.control.channel_names) do
     self:_addchn(i, name)
   end
   if self.verbose > 0 then self.log:green'÷ ready' end
-  self.statbox:put('ready')
+  self.connected(true)
 end
 
 function Sepack:on_disconnect()
@@ -121,19 +135,6 @@ do
   end
 end
 
-function Sepack:_stat_loop()
-  while true do
-    local status = self.ext.statbox:recv()
-    D.red'status:'(status)
-    if status == 'connect' then
-      self:_enumerate()
-    else
-      if status == false then self:on_disconnect() end
-      self.statbox:put(status)
-    end
-  end
-end
-
 do
   local function format_packet(id, data, flags, final)
     flags = (flags or 0) * 2
@@ -174,6 +175,7 @@ CT._default.new = O.constructor(function (self, sepack, id, name)
   self.inbox = T.Mailbox:new()
   self.buffer = {}
   self.busy = false
+  self.connected = o(false)
 end)
 
 function CT._default:_decode(data)
@@ -215,16 +217,16 @@ function CT._default:setup(data)
 end
 
 function CT._default:on_connect()
-  self.connected = true
+  self.connected(true)
 end
 
 function CT._default:on_disconnect()
-  self.connected = false
+  self.connected(false)
   if self.busy then self.inbox:put("") end
 end
 
 function CT._default:xchg(data)
-  if not self.connected then return "" end
+  if not self.connected() then return "" end
   self:write(data, 0)
   local r = self:recv()
   return r
