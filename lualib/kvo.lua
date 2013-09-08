@@ -96,7 +96,7 @@ function Observable:init(init, opts)
 end
 
 function Observable:setcomputed(f, write)
-  checks('Observable', 'function', '?function')
+  checks('Observable', 'function|Observable', '?function|Observable')
   if write then
     if self.write then error('the observable already has a write callback', 2) end
     self.write = write
