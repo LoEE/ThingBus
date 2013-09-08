@@ -1,12 +1,14 @@
 local usb = require'usb'
 local T = require'thread'
+local D = require'util'
 local loop = require'loop'
 local bio = require'bio'
 local O = require'o'
+local E = require'errno'
 
+local verbose = false
 local ssub = string.sub
 
-_G.D = require'util'
 
 local function usage(err)
   print(string.format([[Usage:
@@ -55,8 +57,6 @@ for i,arg in ipairs(arg) do
   end
 end
 
-local D = require'util'
-
 local LeakyBucket = O()
 
 LeakyBucket.new = O.constructor(function (self, T)
@@ -71,12 +71,12 @@ function LeakyBucket:put(v)
   local dt = t - self.t
   if dt > 0 then
     self.t = t
-    self.T0 = {}
     if dt > 1 then
       self.T1 = {}
     else
       self.T1 = self.T0
     end
+    self.T0 = {}
   end
   self.T0[#self.T0 + 1] = v
   return v
@@ -93,11 +93,16 @@ function LeakyBucket:get()
   return T
 end
 
-local errors = LeakyBucket:new(.25)
+local errors = LeakyBucket:new(1)
 
-local function handle_error (msg, err, fatal, errno)
-  local str = errors:put(string.format("error: %s: %s [%s]\n", msg, err, usb.fmt_errno(errno)))
-  if errors:count() > 10 then
+local function handle_error (msg, err, fatal, errc, errno)
+  if errc == "ENODEV" or errc == "iokit/NoDevice" then
+    eprintf("device diconnected\n")
+    os.exit(2)
+  end
+  if verbose then D.red'ERROR:'(msg, err, errc, usb.fmt_errno(errno)) end
+  local str = errors:put(string.format("error: %s: %s [%s %s]\n", msg, err, errc, usb.fmt_errno(errno)))
+  if errors:count() > 15 then
     io.stderr:write("giving up after too many errors:\n")
     for i,v in ipairs(errors:get()) do
       io.stderr:write("  "..v)
@@ -113,12 +118,16 @@ local pin, pout
 local function read_usb (fdout)
   local read_cb, read
   local function read_cb(data, err, fatal, errno)
+    local errc = E[errno]
     if data then
       loop.write(fdout, #data..'\n'..data..'\n')
+      read()
     else
-      handle_error("usb read", err, fatal, errno)
+      if errc ~= "iokit/Aborted" then
+        handle_error("usb read", err, fatal, errc, errno)
+      end
+      loop.run_after(.1, read)
     end
-    read()
   end
   function read()
     pin:read(2048, read_cb)
@@ -176,13 +185,19 @@ else
 end
 T.go(write_usb, fdin)
 
-local function main(d)
+local function open_device(d)
   d:open()
   local ok, err = d:set_configuration(2)
   if not ok then
-    eprintf("performing device reset after a set_configuration error: %s\n", err)
-    assert(d:reset())
-    assert(d:set_configuration(2))
+    if d.reset then
+      eprintf("error: set_configuration: %s\n", err)
+      eprintf("performing device reset\n")
+      assert(d:reset())
+      assert(d:set_configuration(2))
+    else
+      eprintf("error: set_configuration: %s\n", err)
+      os.exit(2)
+    end
   end
   local intf = assert(d:find_interfaces{ bInterfaceClass = 'ff' }[1], 'vendor interface not found')
   assert(intf:open())
@@ -203,7 +218,11 @@ usb.watch{
     if config.product and d.product ~= config.product then return end
     if config.serial and d.serial ~= config.serial then return end
     found = true
-    main(d)
+    local ok, err = T.spcall(open_device, d)
+    if not ok then
+      eprintf("error: open_device: %s\n", err)
+      os.exit(2)
+    end
   end,
   disconnect = function (d)
     --eprintf("- %s\n", tostring(d))
