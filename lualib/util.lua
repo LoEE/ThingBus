@@ -64,6 +64,7 @@ else
     end
   end
 end
+M.color = color
 
 
 
