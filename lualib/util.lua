@@ -68,6 +68,7 @@ M.color = color
 
 
 
+local start = T.now()
 local LEVEL_COLORS = {
   dbg = 'norm',
   log = 'blue',
@@ -88,7 +89,11 @@ local function stderr_sink(enabled, name, level, msg, ...)
   else
     args = ""
   end
-  io.stderr:write (color(c)..msg..' '..args..color('norm')..'\n')
+  local tstamp = ''
+  if M.prepend_timestamps then
+    tstamp = string.format("% 5.3f ", T.now()-start)
+  end
+  io.stderr:write (tstamp..color(c)..msg..' '..args..color('norm')..'\n')
 end
 
 
@@ -181,6 +186,7 @@ end
 
 
 
+M.prepend_timestamps = true
 M.prepend_thread_names = true
 
 local function D(c)
