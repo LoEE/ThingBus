@@ -76,6 +76,7 @@ local LEVEL_COLORS = {
 }
 local function stderr_sink(enabled, name, level, msg, ...)
   if not enabled then return end
+  if type(enabled) == 'string' and not string.find(enabled, level, 1, true) then return end
   -- if LEVEL_COLORS[level] and level ~= 'warn' and level ~= 'err' then return end
   -- print(p:format(enabled, name, level, msg, ...))
   local c = LEVEL_COLORS[level] or level
@@ -121,6 +122,11 @@ end
 
 function Logger:off()
   self.enabled = false
+  return self
+end
+
+function Logger:flt(levels)
+  self.enabled = levels
   return self
 end
 
