@@ -7,6 +7,8 @@ setmetatable(M, M)
 -- private keys
 local _observers = newproxy()
 local _value = newproxy()
+local _seen = newproxy()
+local _version = newproxy()
 local observe_callback = nil
 
 
@@ -86,7 +88,7 @@ end
 function Observable:init(init, opts)
   self[_observers] = {}
   self[_value] = init
-  self.version = 0
+  self[_version] = 0
   if opts then
     self.read = opts.read
     self.write = opts.write
@@ -143,7 +145,7 @@ function Observable:__call(...)
   local old = self[_value]
   if select('#', ...) == 0 then
     if observe_callback then observe_callback(self) end
-    if self.seen then self.seen[T.current()] = self.version end
+    if self[_seen] then self[_seen][T.current()] = self[_version] end
     if self.read then
       return self:read(old)
     else
@@ -197,7 +199,7 @@ function Observable:notify(new)
   -- local p = {}
   -- D'notify request:'(tostring(p), new, self.dirty)
   if not self.dirty then
-    self.version = self.version + 1
+    self[_version] = self[_version] + 1
     local cnew
     if self.coalescing == false then
       cnew = new
@@ -209,13 +211,14 @@ function Observable:notify(new)
       self.dirty = nil
       local new = cnew or self[_value]
       for _,fun in ipairs(self[_observers]) do
-        T.pcall(fun, new)
+        local ok, err = T.sxpcall(function () fun(new) end, debug.traceback)
+        if not ok then D.red('error in Observable watcher:\n\t'..err)() os.exit(2) end
       end
       local n = #self
       for i=n,1,-1 do
         local thd = self[i]
-        if self.version ~= self.seen[thd] then
-          self.seen[thd] = self.version
+        if self[_version] ~= self[_seen][thd] then
+          self[_seen][thd] = self[_version]
           T.resume (thd, self, new)
         end
       end
@@ -225,10 +228,10 @@ end
 
 -- thread API
 function Observable:poll()
-  local s = self.seen
-  if not s then s = setmetatable({}, { __mode = 'k' }) self.seen = s end
+  local s = self[_seen]
+  if not s then s = setmetatable({}, { __mode = 'k' }) self[_seen] = s end
   local thd = T.current()
-  if self.version == s[thd] then return false end
+  if self[_version] == s[thd] then return false end
   return true, {self()}
 end
 
@@ -263,6 +266,7 @@ function ObservableDict:init(init, opts)
   assert(type(init) == 'table', 'the initial value of an ObservableDict has to be a table')
   rawset(self, _observers, {})
   rawset(self, _value, init)
+  rawset(self, _version, 0)
   if opts then
     self.change = opts.change
   end
@@ -303,15 +307,15 @@ ObservableDict.watch = Observable.watch
 ObservableDict.unwatch = Observable.unwatch
 
 function ObservableDict:notify(action, key)
-  local new = self[_value]
-  self.version = self.version + 1
-  for _,fun in ipairs(self[_observers]) do
+  local new = rawget(self, _value)
+  rawset(self, _version, rawget(self, _version) + 1)
+  for _,fun in ipairs(rawget(self, _observers)) do
     T.queuecall(function () fun(action, key) end)
   end
   local n = #self
   for i=n,1,-1 do
     local thd = self[i]
-    self.seen[thd] = self.version
+    rawget(self, _seen)[thd] = rawget(self, _version)
     T.resume (thd, self, action, key)
   end
 end
