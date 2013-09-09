@@ -133,10 +133,17 @@ function tablesave(o, buffer)
 	end
 end
 
+local number_map = {
+	["inf"] = "1e9999",
+	["-inf"] = "-1e9999",
+	["nan"] = '"NaN"',
+}
+
 function simplesave(o, buffer)
 	local t = type(o);
 	if t == "number" then
-		t_insert(buffer, tostring(o));
+		local s = tostring(o)
+		t_insert(buffer, number_map[s] or s);
 	elseif t == "string" then
 		stringsave(o, buffer);
 	elseif t == "table" then

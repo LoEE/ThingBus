@@ -118,7 +118,6 @@ function WebSocket:argsToJS(...)
   local args = {...}
   for i=1,select('#',...) do
     if args[i] == nil then args[i] = json.null end
-    if args[i] ~= args[i] then args[i] = json.null end -- NaN
   end
   return args
 end
