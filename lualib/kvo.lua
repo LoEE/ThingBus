@@ -99,7 +99,11 @@ function Observable:setcomputed(f, write)
   checks('Observable', 'function|Observable', '?function|Observable')
   if write then
     if self.write then error('the observable already has a write callback', 2) end
-    self.write = write
+    if type(write) == 'table' then
+      self.write = function (self, ...) write(...) end
+    else
+      self.write = write
+    end
   end
 
   local weakref = setmetatable({ self }, { __mode = 'v' })
