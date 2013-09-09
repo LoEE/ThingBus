@@ -152,8 +152,8 @@ local function write_usb(fdin)
           os.exit(3)
         end
         if pout then
-          pout:write(data, function (ok, ...)
-            if not ok then handle_error("usb write", ...) end
+          pout:write(data, function (ok, err, fatal, errno)
+            if not ok then handle_error("usb write", err, fatal, E[errno], errno) end
           end)
         end
         if ibuf:read(1) ~= '\n' then
