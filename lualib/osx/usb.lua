@@ -108,6 +108,14 @@ end)
 
 interface.open = rebind('intf', 'open')
 
+function interface:find_endpoints (filter)
+  local pipes = self.intf:find_pipes(filter)
+  for i=1,#pipes do
+    pipes[i] = endpoint:new(pipes[i])
+  end
+  return pipes
+end
+
 function interface:get_endpoint(bEndpointNumber)
   local ep = self.intf:get_pipe(fromhex(bEndpointNumber))
   if not ep then return nil, 'endpoint not found' end

@@ -201,8 +201,8 @@ local function open_device(d)
   end
   local intf = assert(d:find_interfaces{ bInterfaceClass = 'ff' }[1], 'vendor interface not found')
   assert(intf:open())
-  pin  = assert(intf:get_endpoint('83'))
-  pout = assert(intf:get_endpoint('03'))
+  pin  = assert(intf:find_endpoints{'bulk', 'in'}[1])
+  pout = assert(intf:find_endpoints{'bulk', 'out'}[1])
   loop.write(fdout, "connect\n")
   T.go(read_usb, fdout)
 end
