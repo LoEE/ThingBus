@@ -186,7 +186,12 @@ end
 T.go(write_usb, fdin)
 
 local function open_device(d)
-  d:open()
+  local ok, err = T.spcall(d.open, d)
+  if not ok and err:endswith("USBDeviceOpen: (iokit/common) exclusive access and device already open (0xe00002c5)") then -- FIXME
+    eprintf("device busy: %s [%s]\n", d.product, d.serial)
+    return false
+  end
+  local errc = E[errno]
   local ok, err = d:set_configuration(2)
   if not ok then
     if d.reset then
@@ -205,6 +210,7 @@ local function open_device(d)
   pout = assert(intf:find_endpoints{'bulk', 'out'}[1])
   loop.write(fdout, "connect\n")
   T.go(read_usb, fdout)
+  return true
 end
 
 local found
@@ -217,12 +223,12 @@ usb.watch{
     --eprintf("+ %s\n", tostring(d))
     if config.product and d.product ~= config.product then return end
     if config.serial and d.serial ~= config.serial then return end
-    found = true
-    local ok, err = T.spcall(open_device, d)
+    local ok, status = T.spcall(open_device, d)
     if not ok then
-      eprintf("error: open_device: %s\n", err)
+      eprintf("error: open_device: %s\n", status)
       os.exit(2)
     end
+    if status then found = true end
   end,
   disconnect = function (d)
     --eprintf("- %s\n", tostring(d))
