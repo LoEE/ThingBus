@@ -20,7 +20,7 @@ local function hex_trunc (data, maxlen)
 end
 
 local function checkerr(data)
-  if #data == 0 then error("eof") end
+  if #data == 0 then return nil, "timeout" end
   if string.byte(data, 1) == 0 then
     error(string.sub(data, 2))
   end
@@ -447,8 +447,8 @@ do
 
   function chainer:run()
     local reply = self.gpio:xchg(self.cmds)
+    local t = {}
     if #reply > 0 then
-      local t = {}
       local i = 1
       local o = 1
       while i < #reply do
@@ -461,8 +461,8 @@ do
           error('invalid reply byte @ '..i)
         end
       end
-      return t
     end
+    return t
   end
 
   CT.gpio._chainer = chainer
@@ -574,7 +574,11 @@ CT.adc = O(CT._default)
 
 function CT.adc:start(fs)
   local reply = checkerr(self.sepack:setup(self, B.enc32BE(fs)))
-  return B.dec32BE(reply) / 256
+  if reply then
+    return B.dec32BE(reply) / 256
+  else
+    return nil, "timeout"
+  end
 end
 
 function CT.adc:stop()
@@ -605,7 +609,12 @@ function CT.spi:setup_master(clk, bits, cpol, cpha)
   local new = B.flat{'M', self.bits, self.cpol, self.cpha, B.enc32BE(self.clk)}
   if new ~= self.last_setup then
     self.last_setup = new
-    return B.dec32BE(checkerr(self.sepack:setup(self, self.last_setup)))
+    local reply = checkerr(self.sepack:setup(self, self.last_setup))
+    if reply then
+      return B.dec32BE(reply)
+    else
+      return nil, "timeout"
+    end
   end
 end
 
