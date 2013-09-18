@@ -774,12 +774,12 @@ static int interface_find_pipes (lua_State *L)
     if (lua_isnil (L, -1)) break;
     if (lua_type (L, -1) == LUA_TSTRING) {
       const char *s = lua_tostring (L, -1);
-      if (strcmp (s, "in")) edir = kUSBIn;
-      else if (strcmp (s, "out")) edir = kUSBOut;
-      else if (strcmp (s, "control")) etype = kUSBControl;
-      else if (strcmp (s, "isoc")) etype = kUSBIsoc;
-      else if (strcmp (s, "bulk")) etype = kUSBBulk;
-      else if (strcmp (s, "interrupt")) etype = kUSBInterrupt;
+      if (!strcmp (s, "in")) edir = kUSBIn;
+      else if (!strcmp (s, "out")) edir = kUSBOut;
+      else if (!strcmp (s, "control")) etype = kUSBControl;
+      else if (!strcmp (s, "isoc")) etype = kUSBIsoc;
+      else if (!strcmp (s, "bulk")) etype = kUSBBulk;
+      else if (!strcmp (s, "interrupt")) etype = kUSBInterrupt;
       else luaL_error (L, "invalid pipe search term: %s", s);
     } else if (lua_type (L, -1) == LUA_TNUMBER) {
       enumber = lua_tonumber (L, -1);
