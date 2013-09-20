@@ -66,7 +66,7 @@ M.observableAttributes = newproxy()
 
 function M.walkall(self, key, cbs)
   for k, v in pairs(self) do
-    if type(k) == 'string' then
+    if type(k) == 'string' or type(k) == 'number' then
       local childkey = joinkeys(key, k)
       if not walk(v, childkey, cbs) then
         if cbs.attribute then cbs.attribute(childkey, v) end
