@@ -45,17 +45,16 @@ $(PKGS):
 $(CC): cfg
 $(LD): cfg
 
-all: $(EXE)-$P$(EXE_SUFFIX)
+all: $(EXE)-$P-stripped$(EXE_SUFFIX)
 
 install: all
 	@echo »»» installing $P to $(INST)
 	rm -rf $(INST)
 	mkdir -p $(INST)/lualib
-	cp $(EXE)-$P$(EXE_SUFFIX) $(INST)/thb$(EXE_SUFFIX)
-	$(STRIP) $(INST)/thb$(EXE_SUFFIX)
-	$(if $(INSTALLED_FILES),cp $(INSTALLED_FILES) $(INST)/)
-	cp -r lualib/*.lua lualib/http $(INST)/lualib
-	cp -RL lualib/$(PLATFORM_STRING) $(INST)/lualib
+	rsync -t $(EXE)-$P-stripped$(EXE_SUFFIX) $(INST)/thb$(EXE_SUFFIX)
+	$(if $(INSTALLED_FILES),rsync -t $(INSTALLED_FILES) $(INST)/)
+	rsync -rt lualib/*.lua lualib/http $(INST)/lualib
+	rsync -rtL lualib/$(PLATFORM_STRING) $(INST)/lualib
 
 pkg: install
 	@echo »»» packing $P to $(PKG).tar.xz
@@ -68,6 +67,9 @@ l_init.c: luatoc.lua
 
 $(EXE)-$P$(EXE_SUFFIX): $(OBJS) $(LD)
 	@$(LD) $@ $(OBJS)
+
+$(EXE)-$P-stripped$(EXE_SUFFIX): $(EXE)-$P$(EXE_SUFFIX)
+	@$(STRIP) $< -o $@
 
 .%.$(P).o: %.c $(CC)
 	@rm -f .$*.$(P).d
