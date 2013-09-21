@@ -214,13 +214,14 @@ function interface:open()
 end
 
 local function filter_endpoint(ep, filter)
+  if not ep:get_sysattr_value'bEndpointAddress' then return end
   for i,v in ipairs(filter) do
     if type(v) == 'number' then
-      if tonumber(ep:get_sysattr_value'bEndpointAddress', 16) ~= v then return false end
+      if tonumber(ep:get_sysattr_value'bEndpointAddress', 16) ~= v then return end
     elseif v == 'in' or v == 'out' then
-      if ep:get_sysattr_value'direction' ~= v then return false end
+      if ep:get_sysattr_value'direction' ~= v then return end
     elseif v == "control" or v == 'isoc' or v == 'bulk' or v == 'interrupt' then
-      if string.tolower(ep:get_sysattr_value'type') ~= v then return false end
+      if string.lower(ep:get_sysattr_value'type' or '') ~= v then return end
     else
       error("invalid pipe search term type: "..tostring(v))
     end
@@ -235,8 +236,9 @@ function interface:find_endpoints (filter)
   local r = {}
   for i,path in ipairs(enum:get_list()) do
     local d = assert(self.ctx:device_from_syspath(path))
-    if filter_endpoint(d, filter) then r[#r+1] = d end
-    r[#r+1] = endpoint:new(self.ctx, d, self)
+    if filter_endpoint(d, filter) then
+      r[#r+1] = endpoint:new(self.ctx, d, self)
+    end
   end
   return r
 end
@@ -289,6 +291,7 @@ endpoint.new = constructor(function (self, ctx, udevh, intf)
   self.udevh = udevh
   self.bEndpointAddress = udevh:get_sysattr_value'bEndpointAddress'
   self.type = udevh:get_sysattr_value'type'
+  self.direction = udevh:get_sysattr_value'direction'
 end)
 
 function endpoint:write(data, callback)
@@ -305,6 +308,11 @@ function endpoint:read(n, callback)
     return callback(nil, err, true, errno)
   end
   self.dev.callbacks[token] = callback
+end
+
+function endpoint.__tostring(s)
+  return string.format("usb_ep<%s %s 0x%s>",
+    s.type or 'type?', s.direction or 'direction?', s.bEndpointAddress or '??')
 end
 
 --
