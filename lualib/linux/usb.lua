@@ -2,6 +2,7 @@ local loop = require'loop'
 local T = require'thread'
 local udev = require'udev'
 local _usb = require'_usb'
+local D = require'util'
 
 local usb = {
   _usb = _usb,
@@ -154,7 +155,7 @@ function device.__tostring (s)
 end
 
 function device:_handle_reap(token, ...)
-  --D.red'reap result'(token, ...)
+  -- if not token or not (...) then D.red'reap err:'(token, ...) end
   if token then
     local cb = self.callbacks[token]
     self.callbacks[token] = nil
@@ -169,14 +170,16 @@ function device:_handle_reap(token, ...)
     end
     return cb(result, msg, fatal, errno)
   else
-    -- device disconnected
+    -- device disconnected?
     local msg, fatal, errno = ...
-    if errno == ENODEV then
-      self.wrwatch_stop()
-      self.f:close()
-      for token,cb in pairs(self.callbacks) do
-        cb(msg, fatal, errno)
-      end
+    if not errno then errno = fatal fatal = true end
+    if errno ~= ENODEV then
+      D.red'unexpected reap error:'(msg, fatal, errno)
+    end
+    self.wrwatch_stop()
+    self.f:close()
+    for token,cb in pairs(self.callbacks) do
+      cb(msg, fatal, errno)
     end
   end
 end

@@ -96,7 +96,7 @@ end
 local errors = LeakyBucket:new(1)
 
 local function handle_error (msg, err, fatal, errc, errno)
-  if errc == "ENODEV" or errc == "iokit/NoDevice" then
+  if errc == "ENODEV" or errc == "ESHUTDOWN" or errc == "iokit/NoDevice" then
     eprintf("device diconnected\n")
     os.exit(2)
   end
