@@ -1,5 +1,5 @@
 #!/bin/sh
-export BASE="/opt/openwrt/trunk/staging_dir"
-export STAGING_DIR="$BASE/target-mips_r2_uClibc-0.9.33.2"
-export PATH="$BASE/toolchain-mips_r2_gcc-4.6-linaro_uClibc-0.9.33.2/bin:$PATH"
+export BASE="/opt/unstable/openwrt/staging_dir"
+export STAGING_DIR="$BASE/target-mips_34kc_uClibc-0.9.33.2"
+export PATH="$BASE/toolchain-mips_34kc_gcc-4.6-linaro_uClibc-0.9.33.2/bin:$PATH"
 mips-openwrt-linux-gcc "$@"
