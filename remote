@@ -12,6 +12,13 @@ if [ "$HOST" = "" -o "$ARCH" = "" ]; then
 fi
 
 rsync -avzP --exclude='.*' --exclude='/thb-*' --exclude=/install/ --delete --delete-excluded . ${HOST}:$HOSTDIR/ThingBus/
-ssh -t $HOST "cd $HOSTDIR/ThingBus && make install/$ARCH"
+
+if [ "$3" = "pkg" ]; then
+  ssh -t $HOST "cd $HOSTDIR/ThingBus && make pkg/$ARCH"
+  rsync -avzP ${HOST}:$HOSTDIR/ThingBus/install/thb-$ARCH'*' install/
+else
+  ssh -t $HOST "cd $HOSTDIR/ThingBus && make install/$ARCH"
+fi
+
 rsync -avzP ${HOST}:$HOSTDIR/ThingBus/install/$ARCH install/
 rsync -avzP ${HOST}:$HOSTDIR/ThingBus/"thb-$ARCH*" .
