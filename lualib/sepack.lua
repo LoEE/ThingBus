@@ -638,4 +638,33 @@ end
 CT.spi.__tostring = CT._default.__tostring
 
 
+
+CT.watchdog = O(CT._default)
+
+function CT.watchdog:query()
+  local reply = self:setup('?')
+  if not reply then return nil, "timeout" end
+  local _, time_left = B.unpack(reply, ">s4")
+  local mode
+  if time_left < 0 then
+    mode = "reset"
+    time_left = -time_left
+  else
+    mode = "countdown"
+  end
+  return mode, time_left
+end
+
+function CT.watchdog:settimer(val)
+  return self:setup('='..B.enc32BE(val))
+end
+
+function CT.watchdog:feed()
+  self:write('0')
+end
+
+CT.watchdog.__tostring = CT._default.__tostring
+
+
+
 return Sepack
