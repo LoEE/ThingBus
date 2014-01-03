@@ -1,2 +1,2 @@
 #!/bin/sh
-gcc -m32 "$@"
+/usr/local/gcc-4.8.0-for-linux32/bin/i586-pc-linux-gcc -DPATH_MAX=4096 -m32 "$@"
