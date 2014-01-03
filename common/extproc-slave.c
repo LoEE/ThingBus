@@ -10,7 +10,7 @@
 int connect_localhost (char *ioaddr)
 {
   int sock;
-  struct sockaddr_in name;
+  struct sockaddr_in name = {0};
   long port = strtol(ioaddr, NULL, 10);
 
   if (port < 0 || port > 65535)
