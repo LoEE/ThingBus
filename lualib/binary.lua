@@ -1,4 +1,5 @@
 local M = require'_binary'
+local bit32 = require'bit32'
 
 function M.packbits(obj, fmt)
   local result = 0
