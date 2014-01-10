@@ -117,6 +117,25 @@ static int io_raw_close (lua_State *L)
   return 0;
 }
 
+#include <fcntl.h>
+
+static int io_setinherit (lua_State *L)
+{
+  int fd = luaLM_checkfd (L, 1);
+  int inherit = lua_toboolean(L, 2);
+  int flags = inherit ? 0 : FD_CLOEXEC;
+
+  int ret = fcntl(fd, F_SETFD, flags);
+  if (ret < 0) {
+    const char *msg = strerror (errno);
+    lua_pushnil (L);
+    lua_pushstring (L, msg);
+    return 2;
+  }
+
+  return 0;
+}
+
 
 int luaopen_posix_c(lua_State *L);
 const struct luaL_reg platform_posix_preloads[] = {
@@ -135,10 +154,11 @@ void lua_init_platform_posix(lua_State *L)
   };
   luaL_register (L, "os", os_additions);
   const struct luaL_reg io_additions[] = {
-    { "raw_read",   io_raw_read  },
-    { "raw_write",  io_raw_write },
-    { "raw_close",  io_raw_close },
-    { 0,            0            },
+    { "raw_read",   io_raw_read   },
+    { "raw_write",  io_raw_write  },
+    { "raw_close",  io_raw_close  },
+    { "setinherit", io_setinherit },
+    { 0,            0             },
   };
   luaL_register (L, "io", io_additions);
 }

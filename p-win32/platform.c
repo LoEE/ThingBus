@@ -192,6 +192,23 @@ static int io_raw_close (lua_State *L)
   return 0;
 }
 
+static int io_setinherit (lua_State *L)
+{
+  HANDLE handle = (HANDLE)luaLM_checkfd (L, 1);
+  int inherit = lua_toboolean(L, 2);
+  int flags = inherit ? HANDLE_FLAG_INHERIT : 0;
+
+  int ret = SetHandleInformation (handle, HANDLE_FLAG_INHERIT, flags);
+  if (!ret) {
+    const char *msg = win32_strerror(GetLastError());
+    lua_pushnil (L);
+    lua_pushstring (L, msg);
+    return 2;
+  }
+
+  return 0;
+}
+
 
 void lua_init_platform (lua_State *L)
 {
@@ -206,6 +223,7 @@ void lua_init_platform (lua_State *L)
     { "open_osfhandle",  io_open_osfhandle },
     { "raw_read",        io_raw_read       },
     { "raw_close",       io_raw_close      },
+    { "setinherit",      io_setinherit     },
     { 0,                 0                 },
   };
   luaL_register (L, "io", io_additions);
