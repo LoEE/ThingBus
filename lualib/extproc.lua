@@ -22,6 +22,7 @@ function ExtProc:init (args, _log)
   self.log = _log or log.null
 
   local lsock, err = assert(socket.bind ('127.0.0.1', 0))
+  io.setinherit(lsock, false)
   lsock:settimeout (0)
   local addr, port = lsock:getsockname()
   self.lsock = lsock
