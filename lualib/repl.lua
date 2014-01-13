@@ -67,6 +67,8 @@ do
     if source then return source end
     local sink
     source, sink = os.pipe()
+    io.setinherit(source, false)
+    io.setinherit(sink, false)
     os.forward_console(sink)
     return source
   end
