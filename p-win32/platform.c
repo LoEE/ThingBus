@@ -144,6 +144,19 @@ static int io_open_osfhandle(lua_State *L)
   return 1;
 }
 
+static int io_get_osfhandle(lua_State *L)
+{
+  int fd = luaLM_checkfd (L, 1);
+  intptr_t handle = _get_osfhandle(fd);
+
+  // _D("handle: %d, fd: %d", handle, fd);
+  if (handle < 0)
+    return luaLM_posix_error(L, "_get_osfhandle");
+
+  lua_pushnumber(L, handle);
+  return 1;
+}
+
 static int io_raw_read (lua_State *L)
 {
   HANDLE fd = (HANDLE)luaLM_checkfd (L, 1);
@@ -221,6 +234,7 @@ void lua_init_platform (lua_State *L)
   luaL_register (L, "os", os_additions);
   const struct luaL_reg io_additions[] = {
     { "open_osfhandle",  io_open_osfhandle },
+    { "get_osfhandle",   io_get_osfhandle  },
     { "raw_read",        io_raw_read       },
     { "raw_close",       io_raw_close      },
     { "setinherit",      io_setinherit     },
