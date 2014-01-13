@@ -655,6 +655,15 @@ function CT.watchdog:query()
   return mode, time_left
 end
 
+function CT.watchdog:reset_status()
+  local reply = self:setup('R')
+  if not reply then return nil, "timeout" end
+  local _, status = B.unpack(reply, ">s4")
+  local b = B.unpackbits(status, 'soft bod wdt ext por')
+  for k,v in pairs(b) do if not v then b[k] = nil end end
+  return b
+end
+
 function CT.watchdog:settimer(val)
   return self:setup('='..B.enc32BE(val))
 end
