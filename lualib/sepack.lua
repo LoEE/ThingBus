@@ -77,7 +77,14 @@ function Sepack:on_disconnect()
   end
 end
 
+function Sepack:_parsechnname(str)
+  local type, name = string.match(str, "([^:]*):(.*)")
+  if not type then return str, str end
+  return type, name
+end
+
 function Sepack:_addchn(id, name)
+  local type, name = self:_parsechnname(name)
   local chn = self.channels[id]
   if chn then
     if chn.name ~= name then
@@ -90,7 +97,7 @@ function Sepack:_addchn(id, name)
     end
     local CT = self.channeltypes._default
     for k, v in pairs(self.channeltypes) do
-      if string.startswith(name, k) then CT = v break end
+      if string.startswith(type, k) then CT = v break end
     end
     chn = CT:new(self, id, name)
     self.channels[name] = chn
