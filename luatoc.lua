@@ -2,7 +2,7 @@ local out = {[[// Generated file, see luatoc.lua
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
-static char code[] = 
+static char code[] = "\n\n\n\n\n"
 ]]}
 local dep = {}
 local lfs = require'lfs'
@@ -57,7 +57,7 @@ out[#out+1] = [[  ;
 int ]]..func_name..[[ (lua_State *L)
 {
   int n = lua_gettop(L);
-  if (luaL_loadbuffer(L, code, sizeof(code) - 1, "]]..func_name..[[")) return lua_error(L);
+  if (luaL_loadbuffer(L, code, sizeof(code) - 1, "]]..func_name..[[.c")) return lua_error(L);
   lua_insert(L, 1);
   lua_call(L, n, 0);
   return 0;

@@ -2,7 +2,7 @@
 #include <lua.h>
 #include <lauxlib.h>
 #include <lualib.h>
-static char code[] = 
+static char code[] = "\n\n\n\n\n"
   "package.preload[\"extensions\"] = function (...)\n"
   "  -- os\n"
   "  \n"
@@ -512,7 +512,8 @@ static char code[] =
   "    end\n"
   "  end\n"
   "  \n"
-  "  if os.basename(arg[0]) ~= \"thb\" and os.basename(arg[0]) ~= \"thb.exe\" then\n"
+  "  if not os.basename(arg[0]):startswith\"thb\" then\n"
+  "    -- FIXME: realpath does not work for executables in PATH\n"
   "    os.program_path = os.dirname(os.realpath(arg[0]))\n"
   "    addtoPATH(os.program_path)\n"
   "    function main()\n"
@@ -552,7 +553,7 @@ static char code[] =
 int l_init (lua_State *L)
 {
   int n = lua_gettop(L);
-  if (luaL_loadbuffer(L, code, sizeof(code) - 1, "l_init")) return lua_error(L);
+  if (luaL_loadbuffer(L, code, sizeof(code) - 1, "l_init.c")) return lua_error(L);
   lua_insert(L, 1);
   lua_call(L, n, 0);
   return 0;

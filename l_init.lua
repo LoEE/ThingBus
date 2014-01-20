@@ -23,7 +23,8 @@ local function drop_arguments(n)
   end
 end
 
-if os.basename(arg[0]) ~= "thb" and os.basename(arg[0]) ~= "thb.exe" then
+if not os.basename(arg[0]):startswith"thb" then
+  -- FIXME: realpath does not work for executables in PATH
   os.program_path = os.dirname(os.realpath(arg[0]))
   addtoPATH(os.program_path)
   function main()
