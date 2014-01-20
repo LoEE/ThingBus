@@ -100,7 +100,7 @@ function ExtProc.read_message(b)
     if not data then return nil, nil, err end
     local ending, err = b:read(1)
     if not ending then return nil, nil, err end
-    if ending ~= '\n' then return nil, nil, 'framing error: '..D.repr(ending) end
+    if ending ~= '\n' then return nil, nil, 'framing error: '..D.repr(data, ending) end
     return data, nil
   end
 end
@@ -133,9 +133,18 @@ end
 function ExtProc:_out_loop()
   while true do
     local data = self.outbox:recv()
-    assert(type(data) == 'string', 'data is not a string')
-    self.log:dbg('> '..string.format('%s : %s', B.bin2hex(data), D.repr(data)))
-    if self.outfd then loop.write(self.outfd, table.concat{ "tx ", #data, "\n", data, "\n" }) end
+    if self.outfd then
+      if type(data) == 'string' then
+        self.log:dbg('> '..string.format('%s : %s', B.bin2hex(data), D.repr(data)))
+        loop.write(self.outfd, table.concat{ "tx ", #data, "\n", data, "\n" })
+      elseif type(data) == 'table' then
+        self.log:dbg('> '..D.repr(data))
+        local out = table.concat(data, " ")
+        loop.write(self.outfd, out.."\n")
+      else
+        self.log:err('error: unknown data format: '..D.repr(data))
+      end
+    end
   end
 end
 
