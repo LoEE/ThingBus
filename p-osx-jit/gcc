@@ -1,0 +1,3 @@
+#!/bin/sh
+exec llvm-gcc -arch x86_64 "$@"
+# exec clang -arch x86_64 "$@"
