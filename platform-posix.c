@@ -139,7 +139,7 @@ static int io_setinherit (lua_State *L)
 
 int luaopen_posix_c(lua_State *L);
 const struct luaL_reg platform_posix_preloads[] = {
-  //{ "posix",          luaopen_posix_c },
+  { "posix",          luaopen_posix_c },
   { 0,                0               },
 };
 

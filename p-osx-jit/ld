@@ -2,4 +2,4 @@
 . ./cfg
 TARGET="$1"
 shift
-./quiet "$TARGET" p-$P/gcc -pagezero_size 10000 -image_base 100000000 -Lp-$P/lib -framework Foundation -framework IOKit $LDFLAGS -lluajit-5.1 -o "$TARGET" "$@"
+./quiet "$TARGET" p-$P/gcc -pagezero_size 10000 -image_base 100000000 -Lp-$P/lib -framework Foundation -framework IOKit $LDFLAGS -lluajit-5.1 -llua-posix -o "$TARGET" "$@"
