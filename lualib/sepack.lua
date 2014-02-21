@@ -300,6 +300,7 @@ CT.uart = O(CT._default)
 
 function CT.uart:init()
   self.last_timeouts = {}
+  self.last_flags = {}
 end
 
 function CT.uart:setup(baud, bits, parity, stopbits)
@@ -319,6 +320,11 @@ function CT.uart:on_connect()
       self:settimeout(type, ms)
     end
   end
+  if self.last_flags then
+    for type,on in pairs(self.last_flags) do
+      self:setflag(type, on)
+    end
+  end
 end
 
 do
@@ -332,6 +338,19 @@ do
     if not t then error('invalid timeout type: '..type) end
     self.last_timeouts[type] = ms
     checkerr(self.sepack:setup(self, B.flat{t, B.enc16BE(ms * 10)}))
+  end
+end
+
+do
+  local flags = {
+    ext = 'x',
+    cts = 'c',
+  }
+  function CT.uart:setflag(type, on)
+    local t = flags[type]
+    if not t then error('invalid flag: '..type) end
+    self.last_flags[type] = on
+    checkerr(self.sepack:setup(self, B.flat{t, on}))
   end
 end
 
