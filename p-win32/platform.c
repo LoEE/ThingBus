@@ -13,11 +13,12 @@
 
 #include "../common/debug.h"
 
-void realpath (const char *path, char *rpath)
+char *realpath (const char *path, char *rpath)
 {
-  DWORD ret = GetFullPathNameA(path, sizeof(rpath), rpath, NULL);
+  DWORD ret = GetFullPathNameA(path, PATH_MAX, rpath, NULL);
   FAIL_ON(ret == 0, "GetFullPathName[os_realpath]");
   rpath[ret] = '\0';
+  return rpath;
 }
 
 char *get_executable_path (void)
