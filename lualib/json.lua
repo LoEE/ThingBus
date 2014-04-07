@@ -134,9 +134,14 @@ function tablesave(o, buffer)
 end
 
 local number_map = {
+  -- sane systems:
 	["inf"] = "1e9999",
 	["-inf"] = "-1e9999",
 	["nan"] = '"NaN"',
+	-- Windows:
+	["1.#INF"] = "1e9999",
+	["-1.#INF"] = "-1e9999",
+	["-1.#IND"] = '"NaN"',
 }
 
 function simplesave(o, buffer)
