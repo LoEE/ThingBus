@@ -1,2 +1,2 @@
 #!/bin/sh
-/usr/local/gcc-4.8.0-for-linux32/bin/i586-pc-linux-strip "$@"
+/usr/local/gcc-4.8.0-for-linux32/bin/i586-pc-linux-strip -d "$@"

@@ -1,2 +1,2 @@
 #!/bin/sh
-exec x86_64-w64-mingw32-strip "$@"
+exec x86_64-w64-mingw32-strip -d "$@"
