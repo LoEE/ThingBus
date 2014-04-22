@@ -1,8 +1,8 @@
 local M = {}
 
-function M.FileHandler (root, file)
+function M.FileHandler (root, file, opts)
   return function (req, path)
-    if file then return req:replyWithFile (root .. file) end
+    if file then return req:replyWithFile (root .. file, opts) end
     local parts = string.splitall (path, "/")
     local resolved = {}
     for _,part in ipairs(parts) do
@@ -13,7 +13,7 @@ function M.FileHandler (root, file)
         resolved[#resolved+1] = part
       end
     end
-    return req:replyWithFile (root .. table.concat(resolved, '/'))
+    return req:replyWithFile (root .. table.concat(resolved, '/'), opts)
   end
 end
 

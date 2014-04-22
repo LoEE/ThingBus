@@ -102,7 +102,7 @@ function Request.reply(self, status)
   return reply
 end
 
-function Request.replyWithFile (self, path)
+function Request.replyWithFile (self, path, opts)
   local file, err = io.open(path, "rb")
   if not file then D('replyWithFile: ' .. err)() return end
   local attr = lfs.attributes(path)
@@ -120,7 +120,13 @@ function Request.replyWithFile (self, path)
   end
 
   r:header("Last-Modified", mtime)
-  r:header("Expires", etime)
+  local cc = opts.cache_control
+  if not cc then cc = "max-age=0" end
+  if type(cc) == 'string' then
+    r:header("Cache-Control", cc);
+  else
+    cc(self, r, path, opts)
+  end
 
   if modified then
     r:write (assert (file:read ("*a"))):sendAs (self.srv.MIME:fromFilename(path) or "text")
