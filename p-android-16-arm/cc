@@ -1,0 +1,5 @@
+#!/bin/sh
+. ./cfg
+TARGET="$1"
+shift
+./quiet "$TARGET" p-$P/gcc -o "$TARGET" -march=armv7-a -mfloat-abi=softfp $CFLAGS -Ip-$P -Ip-$P/lib "$@"
