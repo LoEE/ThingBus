@@ -8,7 +8,7 @@ struct buffer {
 };
 
 int buffer_ensure (struct buffer *b, buflen_t space);
-buflen_t buffer_rpeek (struct buffer *b, uint8_t **s);
+buflen_t buffer_rpeek (struct buffer *b, const uint8_t **s);
 void buffer_rseek (struct buffer *b, buflen_t n);
 buflen_t buffer_wpeek (struct buffer *b, uint8_t **s);
 void buffer_wseek (struct buffer *b, buflen_t n);

@@ -45,7 +45,7 @@ int buffer_ensure (struct buffer *b, buflen_t space)
   return 1;
 }
 
-buflen_t buffer_rpeek (struct buffer *b, uint8_t **s)
+buflen_t buffer_rpeek (struct buffer *b, const uint8_t **s)
 {
   *s = b->data + b->start;
   return b->end - b->start;

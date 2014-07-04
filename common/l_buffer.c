@@ -34,7 +34,7 @@ static int lua_buffer_get (lua_State *L)
 {
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
   buflen_t off = 0;
-  uint8_t *s;
+  const uint8_t *s;
   buflen_t size = buffer_rpeek (&lb->b, &s);
   if (lua_isnumber (L, 3)) {
     size_t end = lua_tonumber (L, 3);
@@ -60,7 +60,7 @@ static int lua_buffer_write (lua_State *L)
 static int lua_buffer_peek (lua_State *L)
 {
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
-  uint8_t *s;
+  const uint8_t *s;
   buflen_t a = buffer_rpeek (&lb->b, &s);
   if (!a) return 0;
   if (!lua_isnoneornil (L, 2)) {
@@ -75,7 +75,7 @@ static int lua_buffer_peek (lua_State *L)
 static int lua_buffer_read (lua_State *L)
 {
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
-  uint8_t *s;
+  const uint8_t *s;
   buflen_t a = buffer_rpeek (&lb->b, &s);
   if (!a) return 0;
   if (!lua_isnoneornil (L, 2)) {
@@ -91,7 +91,7 @@ static int lua_buffer_read (lua_State *L)
 static int lua_buffer_readuntil (lua_State *L)
 {
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
-  uint8_t *s;
+  const uint8_t *s;
   buflen_t a = buffer_rpeek (&lb->b, &s);
   if (!a) return 0;
   size_t n;
@@ -108,7 +108,7 @@ static int lua_buffer_readuntil (lua_State *L)
 static int lua_buffer_peekstruct (lua_State *L)
 {
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
-  uint8_t *s;
+  const uint8_t *s;
   buflen_t a = buffer_rpeek (&lb->b, &s);
   const char *fmt = luaL_checkstring (L, 2);
   int results = 0;
@@ -134,7 +134,7 @@ static int lua_buffer_rseek (lua_State *L)
 {
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
   size_t n = luaL_checkinteger (L, 2);
-  uint8_t *c;
+  const uint8_t *c;
   buflen_t a = buffer_rpeek (&lb->b, &c);
   if (n > a) return 0;
   buffer_rseek (&lb->b, n);
@@ -145,7 +145,7 @@ static int lua_buffer_rseek (lua_State *L)
 static int lua_buffer_len (lua_State *L)
 {
   struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
-  uint8_t *c;
+  const uint8_t *c;
   buflen_t a = buffer_rpeek (&lb->b, &c);
   lua_pushnumber (L, a);
   return 1;
