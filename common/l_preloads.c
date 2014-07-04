@@ -14,6 +14,7 @@
 #include "l_binary.h"
 #include "l_buffer.h"
 #include "l_sha.h"
+#include "l_miniz.h"
 int luaopen_bit32(lua_State *L);
 int luaopen_socket_core(lua_State *L);
 int luaopen_lfs(lua_State *L);
@@ -34,5 +35,6 @@ const struct luaL_reg preloads[] = {
   { "yajl",           luaopen_yajl          },
   { "ev",             luaopen_ev            },
   { "zip",            luaopen_brimworks_zip },
+  { "miniz",          luaopen_miniz         },
   { 0,                0                     },
 };

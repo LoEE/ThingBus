@@ -15,7 +15,7 @@ DATE  := $(shell date +%Y.%m.%d)
 # Source files
 CSRCS  = main.c l_init.c $(wildcard p-$P/*.c) $(wildcard p-$P/*.m)
 CSRCS += $(addprefix common/,LM.c luaP.c l_additions.c l_preloads.c)
-CSRCS += $(addprefix common/,l_buffer.c buffer.c l_binary.c str.c byte.c l_crc.c l_xtea.c l_sha.c lbitlib.c)
+CSRCS += $(addprefix common/,l_buffer.c buffer.c l_binary.c str.c byte.c l_crc.c l_xtea.c l_sha.c lbitlib.c l_miniz.c)
 
 OBJS   = $(join $(dir $(CSRCS)), $(addprefix .,$(addsuffix .$(P).o,$(notdir $(basename $(CSRCS))))))
 EXE    = thb
