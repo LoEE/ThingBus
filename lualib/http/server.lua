@@ -120,7 +120,7 @@ function Request.replyWithFile (self, path, opts)
   end
 
   r:header("Last-Modified", mtime)
-  local cc = opts.cache_control
+  local cc = opts and opts.cache_control
   if not cc then cc = "max-age=0" end
   if type(cc) == 'string' then
     r:header("Cache-Control", cc);
