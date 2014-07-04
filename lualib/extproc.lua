@@ -88,6 +88,7 @@ function ExtProc.read_message(b)
     return nil, nil, err
   end
   if string.sub(line, -1) == '\r' then line = string.sub(line, 1, -2) end
+  if string.startswith(line, "rx ") then line = string.sub(line, 4) end
   local len = tonumber(line)
   if not len then
     if #line == 0 then
