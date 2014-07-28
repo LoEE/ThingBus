@@ -277,9 +277,9 @@ function ObservableDict:init(init, opts)
 end
 
 function ObservableDict:__index(k)
-  if observe_callback then observe_callback(self, k) end
   local v = self[_value][k]
   if v == nil then return getmetatable(self)[k] end
+  if observe_callback then observe_callback(self, k) end
   return v
 end
 
