@@ -179,7 +179,7 @@ function device:_handle_reap(token, ...)
     self.wrwatch_stop()
     self.f:close()
     for token,cb in pairs(self.callbacks) do
-      cb(msg, fatal, errno)
+      cb(nil, msg, fatal, errno)
     end
   end
 end
