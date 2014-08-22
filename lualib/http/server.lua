@@ -214,7 +214,7 @@ function M.http_handler (srv, router, c)
   local n = 0
   while true do
     local data, err = inb:readuntil('\r\n\r\n')
-    local stime = socket.gettime()
+    local stime = T.now()
     if not data then
       if err == "eof" then
         c:close()
@@ -247,7 +247,7 @@ function M.http_handler (srv, router, c)
     end
 
     if not req.websocket and not req.nolog then
-      local etime = socket.gettime()
+      local etime = T.now()
       local reply = req.done
       req:log ("%s %s [%d in:%d out:%d t:%.2f]", req.method, req.origurl, reply.status,
                                                  #data + 4 + bodylen, reply.hlen + reply.clen, (etime - stime) * 1000)

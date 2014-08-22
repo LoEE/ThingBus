@@ -221,7 +221,7 @@ do
   local times = {}
   function M.rtime (name)
     names[#names + 1] = name
-    times[#times + 1] = socket.gettime()
+    times[#times + 1] = T.now()
   end
   function M.rtimedump ()
     local maxl = 0
