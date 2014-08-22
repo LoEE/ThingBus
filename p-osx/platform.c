@@ -5,6 +5,8 @@
 
 // mach_error
 #include <mach/mach.h>
+// mach_absolute_time & co.
+#include <mach/mach_time.h>
 
 // _NSGetExecutablePath
 #include <mach-o/dyld.h>
@@ -46,14 +48,31 @@ const struct luaL_reg platform_preloads[] = {
   { 0,                0                   },
 };
 
+static mach_timebase_info_data_t sTimebaseInfo;
+
+static int os_time_monotonic (lua_State *L)
+{
+  double t = (double)mach_absolute_time() * sTimebaseInfo.numer / sTimebaseInfo.denom / 1.0e9;
+  lua_pushnumber (L, t);
+  return 1;
+}
+
 void init_platform (void)
 {
   // for mach_error
   vprintf_stderr_func = vprintf_stderr;
+
+  // for os_time_monotonic
+  mach_timebase_info(&sTimebaseInfo);
 }
 
 void lua_init_platform_posix(lua_State *L);
 void lua_init_platform (lua_State *L)
 {
   lua_init_platform_posix(L);
+  const struct luaL_reg os_additions[] = {
+    { "time_monotonic", os_time_monotonic },
+    { 0,                0                 },
+  };
+  luaL_register (L, "os", os_additions);
 }

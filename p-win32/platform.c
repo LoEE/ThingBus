@@ -132,6 +132,17 @@ static int os_time_unix (lua_State *L)
   return 1;
 }
 
+static LARGE_INTEGER PerformanceFrequency;
+
+static int os_time_monotonic (lua_State *L)
+{
+  LARGE_INTEGER ti;
+  QueryPerformanceCounter(&ti); // cannot fail on Windows newer than XP
+  double t = (double)ti.QuadPart / PerformanceFrequency.QuadPart;
+  lua_pushnumber (L, t);
+  return 1;
+}
+
 static int io_open_osfhandle(lua_State *L)
 {
   int handle = luaLM_checkfd (L, 1);
@@ -226,10 +237,12 @@ static int io_setinherit (lua_State *L)
 
 void lua_init_platform (lua_State *L)
 {
+  QueryPerformanceFrequency(&PerformanceFrequency); // cannot fail on Windows newer than XP
   const struct luaL_reg os_additions[] = {
     { "forward_console",  os_forward_console },
     { "getpid",           os_getpid          },
     { "time_unix",        os_time_unix       },
+    { "time_monotonic",   os_time_monotonic  },
     { 0,                  0                  },
   };
   luaL_register (L, "os", os_additions);
