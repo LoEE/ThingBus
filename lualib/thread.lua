@@ -18,7 +18,7 @@ end
 local pcall = pcall
 local xpcall = xpcall
 local Thread = {
-  now = socket.gettime,
+  now = os.time_monotonic or socket.gettime,
   create = create,
   current = current,
   spcall = pcall,
