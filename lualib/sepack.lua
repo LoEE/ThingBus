@@ -429,7 +429,7 @@ do
   end
 
   function chainer:output(name)
-    return self:setup(name, 'out', 'pull-none')
+    return self:setup(name, 'out', 'pull-none', 'no-hystheresis')
   end
 
   function chainer:input(name, ...)
