@@ -234,7 +234,9 @@ static int lua_binary_unpackbits (lua_State *L)
   lua_pushliteral (L, "_");
   int starti = lua_gettop(L);
   while (1) {
-    size_t item_len = byte_findc (fmt, n, ' ');
+    while(n && (*fmt == ' ' || *fmt == '\n')) { n--; fmt++; }
+    size_t item_len = 0;
+    while(item_len < n && fmt[item_len] != ' ' && fmt[item_len] != '\n') { item_len++; }
     size_t name_len = byte_findc (fmt, item_len, ':');
     lua_checkstack (L, 2);
     lua_pushlstring (L, fmt, name_len);
