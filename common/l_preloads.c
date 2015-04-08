@@ -21,6 +21,7 @@ int luaopen_lfs(lua_State *L);
 int luaopen_yajl(lua_State *L);
 int luaopen_ev(lua_State *L);
 int luaopen_brimworks_zip(lua_State *L);
+int luaopen_lpeg(lua_State *L);
 
 const struct luaL_reg preloads[] = {
   { "bit32",          luaopen_bit32         },
@@ -36,5 +37,6 @@ const struct luaL_reg preloads[] = {
   { "ev",             luaopen_ev            },
   { "zip",            luaopen_brimworks_zip },
   { "miniz",          luaopen_miniz         },
+  { "lpeg",           luaopen_lpeg          },
   { 0,                0                     },
 };
