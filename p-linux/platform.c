@@ -34,9 +34,11 @@ char *get_executable_path (void)
 int luaopen_ev(lua_State *L);
 int luaopen_udev(lua_State *L);
 int luaopen_usb(lua_State *L);
+int luaopen_i2c(lua_State *L);
 const struct luaL_reg platform_preloads[] = {
   { "udev",           luaopen_udev        },
   { "_usb",           luaopen_usb         },
+  { "_i2c",           luaopen_i2c         },
   { 0,                0                   },
 };
 
