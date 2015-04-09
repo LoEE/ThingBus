@@ -1,0 +1,5 @@
+#!/bin/sh
+. ./cfg
+TARGET="$1"
+shift
+./quiet "$TARGET" p-$P/gcc -o "$TARGET" "$@" -Lp-$P/lib -Wl,-Bstatic -Wl,-E $LDFLAGS -llua-udev -llua -llua-posix -Wl,-Bdynamic -ludev -ldl -lrt -lm

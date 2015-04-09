@@ -1,0 +1,2 @@
+#!/bin/sh
+/usr/local/arm-loee-linux-gnueabi-20150122.loee.pl/bin/arm-linux-gnueabi-strip -d "$@"
