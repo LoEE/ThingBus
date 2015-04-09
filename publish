@@ -1,0 +1,8 @@
+#!/bin/sh
+
+DATE=$(date +%Y.%m.%d)
+DIR=thb-$DATE
+
+mkdir -p $DIR
+mv install/thb-*$DATE* $DIR/
+rsync -avP $DIR loee:srv/thb/dl/

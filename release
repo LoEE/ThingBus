@@ -1,0 +1,13 @@
+#!/bin/sh
+
+make pkg/linux pkg/linux64 pkg/android-16-arm pkg/osx64 pkg/osx pkg/win32 pkg/linux-armhf
+./remote jpc@green openwrt-mips pkg
+
+DATE=$(date +%Y.%m.%d)
+DIR=thb-$DATE
+
+mkdir -p $DIR
+mv install/thb-*$DATE* $DIR/
+rsync -avP $DIR loee:srv/thb/dl/
+
+git tag -a "$DIR" -m "Release $DATE"
