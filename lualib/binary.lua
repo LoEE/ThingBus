@@ -109,7 +109,6 @@ function M.binary_encoder (n, le)
       step = -step
     end
     local bs = {}
-    local old_x = x
     for i=s,e,step do
       bs[i] = string.char (math.floor (x % 256))
       x = math.floor (x / 256)

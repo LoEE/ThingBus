@@ -24,7 +24,7 @@ char *get_executable_path (void)
 
   ssize_t ret = readlink(linkname, exename, sizeof(exename));
   if (ret < 0) EXIT_ON_POSIX_ERROR("cannot read the /proc/*/exe link", 1);
-  if (ret >= (ssize_t)sizeof(exename)) { 
+  if (ret >= (ssize_t)sizeof(exename)) {
     eprintf ("error: /proc/*/exe link length is > PATH_MAX\n"); exit(1);
   }
   exename[ret] = 0;
