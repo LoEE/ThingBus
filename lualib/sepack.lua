@@ -151,13 +151,16 @@ do
 
   function Sepack:write (channel, data, flags)
     if self.verbose > 1 then self.log:green(string.format ("%s:%x>", channel.name, flags or 0), D.hex(data)) end
+    local pkgs = {}
     while #data > 0 do
       local final = #data <= 62
       local p = format_packet(channel.id, data:sub(1,62), flags, final)
-      if self.verbose > 2 then self.log:cyan(string.format('>>[%d]', #p), hex_trunc(p, 20)) end
-      self.ext.outbox:put(p)
+      pkgs[#pkgs+1] = p
       data = data:sub(63)
     end
+    local out = table.concat(pkgs)
+    if self.verbose > 2 then self.log:cyan(string.format('>>[%d]', #out), hex_trunc(out, 20)) end
+    self.ext.outbox:put(out)
   end
 end
 
