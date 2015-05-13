@@ -9,6 +9,7 @@
 #include <string.h>
 #include <errno.h>
 
+#if !defined(__ANDROID__)
 #include <sys/ioctl.h>
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
@@ -129,10 +130,15 @@ static const struct luaL_reg funcs[] = {
   { "xchg",      xchg      },
   { NULL,        NULL      },
 };
+#endif
 
 int luaopen_i2c (lua_State *L)
 {
+#if !defined(__ANDROID__)
   lua_newtable(L);
   luaL_register (L, NULL, funcs);
   return 1;
+#else
+  return 0;
+#endif
 }
