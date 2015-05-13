@@ -35,10 +35,12 @@ int luaopen_ev(lua_State *L);
 int luaopen_udev(lua_State *L);
 int luaopen_usb(lua_State *L);
 int luaopen_i2c(lua_State *L);
+int luaopen_spi(lua_State *L);
 const struct luaL_reg platform_preloads[] = {
   { "udev",           luaopen_udev        },
   { "_usb",           luaopen_usb         },
   { "_i2c",           luaopen_i2c         },
+  { "_spi",           luaopen_spi         },
   { 0,                0                   },
 };
 
