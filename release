@@ -1,7 +1,6 @@
 #!/bin/sh
 
-# FIXME: pkg/win32
-make pkg/linux pkg/linux64 pkg/android-16-arm pkg/osx64 pkg/osx pkg/linux-armhf
+make pkg/linux pkg/linux64 pkg/android-16-arm pkg/osx64 pkg/osx pkg/linux-armhf pkg/win32 pkg/win64
 ./remote jpc@green openwrt-mips pkg
 
 DATE=$(date +%Y.%m.%d)
