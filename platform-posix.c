@@ -138,9 +138,11 @@ static int io_setinherit (lua_State *L)
 
 
 int luaopen_posix_c(lua_State *L);
+int luaopen_socket_unix(lua_State *L);
 const struct luaL_reg platform_posix_preloads[] = {
-  { "posix",          luaopen_posix_c },
-  { 0,                0               },
+  { "posix",          luaopen_posix_c     },
+  { "socket.unix",    luaopen_socket_unix },
+  { 0,                0                   },
 };
 
 void lua_init_platform_posix(lua_State *L)
