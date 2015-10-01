@@ -1,4 +1,5 @@
 #!/usr/bin/env lua
+local T = require'thread'
 
 -- **Testy** is a quick-and-dirty unit testing script for Lua modules
 -- that tries to be as unobtrusive as possible. It loads the specified
@@ -415,6 +416,13 @@ end
 -- errors. Errors at this stage are considered fatal and thus
 -- terminate the test session.
 for i,f in ipairs( files ) do
+  local rpath = os.realpath(f)
+  if rpath then
+    local p = os.dirname(rpath)
+    package.path = p..'/?.luac;'..p..'/?/init.luac;'..p..'/?.lua;'..p..'/?/init.lua;'..package.path
+    package.cpath = p..'/?.so;'..package.cpath
+    os.program_path = p
+  end
   chunks[ i ] = assert( loadfile_with_extra_return( f ) )
 end
 
@@ -482,7 +490,7 @@ for _,t in ipairs( tests ) do
   -- The test functions are called with `debug.traceback` as error
   -- message handler, so that unhandled errors in test functions can
   -- be reported with stack traces.
-  local ok, msg = xpcall( t.func, debug.traceback )
+  local ok, msg = T.sxpcall( t.func, debug.traceback )
   -- After each test function a new line is started no matter what
   -- output the `assert`s in the test function produced.
   if cursor_pos ~= 0 then
