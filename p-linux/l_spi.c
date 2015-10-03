@@ -37,7 +37,7 @@ struct spi_ioc_transfer_sunxi34 {
 
 /* not all platforms use <asm-generic/ioctl.h> or _IOC_TYPECHECK() ... */
 #define SPI_MSGSIZE_SUNXI34(N) \
-  ((((N)*(sizeof (struct spi_ioc_transfer_sunxi34))) < (1 << _IOC_SIZEBITS)) \
+  ((((N)*(sizeof (struct spi_ioc_transfer_sunxi34))) < (1 << 13)) \
     ? ((N)*(sizeof (struct spi_ioc_transfer_sunxi34))) : 0)
 #define SPI_IOC_MESSAGE_SUNXI34(N) _IOW(SPI_IOC_MAGIC, 0, char[SPI_MSGSIZE_SUNXI34(N)])
 
