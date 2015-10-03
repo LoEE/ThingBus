@@ -179,7 +179,14 @@ function usb.watch(o)
     connect = function (d)
       local newd = usb.device:new (d)
       devs[d] = newd
-      cbagent(o.connect, newd)
+      cbagent(function ()
+        -- workaround a possible race with kernel drivers
+        -- otherwise we may succeed with set_configuration
+        -- but the device may still be snatched away from us and reconfigured by the kernel driver
+        -- it never seemed to be the case before OS X 10.11 (El Captain) so it may be a regression in OS X
+        T.sleep(.1)
+        o.connect(newd)
+      end)
     end,
     disconnect = function (d)
       local newd = devs[d]
