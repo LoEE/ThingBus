@@ -1,0 +1,3 @@
+export BASE="/opt/openwrt/staging_dir"
+export STAGING_DIR="$BASE/target-mips_34kc_musl-1.1.10"
+export PATH="$BASE/toolchain-mips_34kc_gcc-4.8-linaro_musl-1.1.10/bin:$PATH"
