@@ -17,6 +17,7 @@
 #include "l_miniz.h"
 int luaopen_bit32(lua_State *L);
 int luaopen_socket_core(lua_State *L);
+int luaopen_mime_core(lua_State *L);
 int luaopen_lfs(lua_State *L);
 int luaopen_yajl(lua_State *L);
 int luaopen_ev(lua_State *L);
@@ -26,6 +27,7 @@ int luaopen_lpeg(lua_State *L);
 const struct luaL_reg preloads[] = {
   { "bit32",          luaopen_bit32         },
   { "socket.core",    luaopen_socket_core   },
+  { "mime.core",      luaopen_mime_core     },
   { "lfs",            luaopen_lfs           },
   { "_binary",        luaopen_binary        },
   { "crc",            luaopen_crc           },
