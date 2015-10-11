@@ -127,6 +127,18 @@ function Request.replyWithFile (self, path, opts)
   else
     cc(self, r, path, opts)
   end
+  local headers = opts and opts.headers
+  if headers then
+    if type(headers) == 'function' then
+      headers(r)
+    elseif type(headers) == 'table' then
+      for _,header in ipairs(headers) do
+        r:header(unpack(header))
+      end
+    else
+      error('invalid headers')
+    end
+  end
 
   if modified then
     r:write (assert (file:read ("*a"))):sendAs (self.srv.MIME:fromFilename(path) or "text")
