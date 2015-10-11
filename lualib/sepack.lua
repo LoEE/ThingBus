@@ -62,7 +62,7 @@ function Sepack:_ext_status(status)
 end
 
 function Sepack:_enumerate()
-  self:_addchn(0, 'control')
+  self:_addchn(0, 'control', 'force-init')
   for i, name in ipairs(self.channels.control.channel_names) do
     self:_addchn(i, name)
   end
@@ -83,7 +83,7 @@ function Sepack:_parsechnname(str)
   return type, name
 end
 
-function Sepack:_addchn(id, name)
+function Sepack:_addchn(id, name, forceinit)
   local type, name = self:_parsechnname(name)
   local chn = self.channels[id]
   if chn then
@@ -102,7 +102,10 @@ function Sepack:_addchn(id, name)
     chn = CT:new(self, id, name)
     self.channels[name] = chn
     self.channels[id] = chn
-    chn:on_connect()
+    forceinit = true
+  end
+  chn:on_connect()
+  if forceinit then
     chn:init()
   end
 end
