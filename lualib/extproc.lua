@@ -8,7 +8,7 @@ local Object = require'oo'
 local o = require'kvo'
 
 local ExtProc = Object:inherit{
-  respawn_period = 5,
+  respawn_period = 1,
   portno_token = newproxy()
 }
 

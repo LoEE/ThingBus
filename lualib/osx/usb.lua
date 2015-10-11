@@ -184,7 +184,7 @@ function usb.watch(o)
         -- otherwise we may succeed with set_configuration
         -- but the device may still be snatched away from us and reconfigured by the kernel driver
         -- it never seemed to be the case before OS X 10.11 (El Captain) so it may be a regression in OS X
-        T.sleep(.1)
+        T.sleep(.2)
         o.connect(newd)
       end)
     end,
