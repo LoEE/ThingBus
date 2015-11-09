@@ -413,7 +413,6 @@ local function apply (mbox, fun, ...)
 end
 
 function Thread.agent ()
-  local mbox = Mailbox:new()
   local agent = {
     [ThreadMailbox] = apply
   }
@@ -424,6 +423,7 @@ function Thread.agent ()
     return Thread.send(thd, nil, thunk, ...)
   end
   local function pcall (self, thunk, ...)
+    local mbox = Mailbox:new()
     Thread.send(thd, mbox, thunk, ...)
     return mbox:recv()
   end
@@ -432,8 +432,7 @@ function Thread.agent ()
     return ...
   end
   local function call (self, thunk, ...)
-    Thread.send(thd, mbox, thunk, ...)
-    return handle_return(mbox:recv())
+    return handle_return(self:pcall(thunk, ...))
   end
   local function handle (self, evsrc, func)
     agent[evsrc] = func
