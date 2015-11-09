@@ -319,22 +319,45 @@ function Thread.install_loop (loop)
   local Timeout = Source:inherit()
   Thread.Timeout = Timeout
 
-  function Timeout.init (self, seconds)
+  function Timeout:init(seconds)
     if type(seconds) ~= 'number' then error('timeout is not a number: '..tostring(seconds), 3) end
-    self.timer = loop.run_after (seconds, function ()
-      self.fired = true
-      for i, thd in ipairs(self) do
-        resume (thd, self)
-      end
-    end)
+    self.time = seconds
+    if seconds <= 0 then
+      self:fire()
+    else
+      self.timer = loop.run_after (seconds, function ()
+        self:fire()
+      end)
+    end
   end
 
-  function Timeout.poll (self)
-    return self.fired
+  function Timeout:fire()
+    self.timer = nil
+    for i, thd in ipairs(self) do
+      resume (thd, self)
+    end
   end
 
-  function Timeout.cancel (self)
-    return self.timer:cancel ()
+  function Timeout:poll()
+    return not self.timer
+  end
+
+  function Timeout:cancel()
+    if not self.timer then return end
+    self.timer:cancel()
+    self.timer = nil
+  end
+
+  function Timeout:restart(time)
+    self:cancel()
+    self:init(time or self.time)
+  end
+
+  function Timeout:tick(time)
+    if self:poll() then
+      self:restart(time)
+      return true
+    end
   end
 end
 
