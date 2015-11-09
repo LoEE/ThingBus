@@ -52,6 +52,13 @@ struct usbdevfs_urb {
   struct usbdevfs_iso_packet_desc iso_frame_desc[0];
 };
 
+struct usbdevfs_setinterface {
+  unsigned int interface;
+  unsigned int altsetting;
+};
+
+#define USBDEVFS_RESETEP           _IOR('U', 3, unsigned int)
+#define USBDEVFS_SETINTERFACE      _IOR('U', 4, struct usbdevfs_setinterface)
 #define USBDEVFS_SETCONFIGURATION  _IOR('U', 5, unsigned int)
 #define USBDEVFS_GETDRIVER         _IOW('U', 8, struct usbdevfs_getdriver)
 #define USBDEVFS_SUBMITURB         _IOR('U', 10, struct usbdevfs_urb)
@@ -59,6 +66,7 @@ struct usbdevfs_urb {
 #define USBDEVFS_CLAIMINTERFACE    _IOR('U', 15, unsigned int)
 #define USBDEVFS_RELEASEINTERFACE  _IOR('U', 16, unsigned int)
 #define USBDEVFS_IOCTL             _IOWR('U', 18, struct usbdevfs_ioctl)
+#define USBDEVFS_CLEAR_HALT        _IOR('U', 21, unsigned int)
 #define USBDEVFS_DISCONNECT        _IO('U', 22)
 #define USBDEVFS_CONNECT           _IO('U', 23)
 
@@ -74,6 +82,35 @@ static int _simple_ioctl(lua_State *L, int fd, int code, void *arg, const char *
   int r;
   return (r = _ioctl(L, fd, code, arg, name)) ? r
     : (lua_pushboolean (L, 1), 1);
+}
+
+static int reset_ep (lua_State *L)
+{
+  int fd = luaLM_checkfd (L, 1);
+  unsigned int ep = luaL_checknumber (L, 2);
+  eprintf("reset_ep: %02x\n", ep);
+  return _simple_ioctl(L, fd, USBDEVFS_RESETEP, &ep, __FUNCTION__);
+}
+
+static int set_interface (lua_State *L)
+{
+  int fd = luaLM_checkfd (L, 1);
+  unsigned int intf = luaL_checknumber (L, 2);
+  unsigned int altsetting = luaL_checknumber (L, 3);
+  struct usbdevfs_setinterface setintf = {
+    .interface = intf,
+    .altsetting = altsetting,
+  };
+  eprintf("set_interface: %02x %02x\n", intf, altsetting);
+  return _simple_ioctl(L, fd, USBDEVFS_SETINTERFACE, &setintf, __FUNCTION__);
+}
+
+static int clear_halt (lua_State *L)
+{
+  int fd = luaLM_checkfd (L, 1);
+  unsigned int ep = luaL_checknumber (L, 2);
+  eprintf("clear_halt: %02x\n", ep);
+  return _simple_ioctl(L, fd, USBDEVFS_CLEAR_HALT, &ep, __FUNCTION__);
 }
 
 static int set_configuration (lua_State *L)
@@ -202,6 +239,9 @@ static int reap_urb (lua_State *L)
 } 
 
 static const struct luaL_reg funcs[] = {
+  { "reset_ep",           reset_ep          },
+  { "set_interface",      set_interface     },
+  { "clear_halt",         clear_halt        },
   { "set_configuration",  set_configuration },
   { "get_driver",         get_driver        },
   { "claim_interface",    claim_interface   },
