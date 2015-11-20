@@ -234,6 +234,22 @@ static int io_setinherit (lua_State *L)
   return 0;
 }
 
+static int io_fsync (lua_State *L)
+{
+  int fd = luaLM_getfd (L, 1);
+  intptr_t handle = _get_osfhandle(fd);
+
+  if (!FlushFileBuffers ((HANDLE)handle)) {
+    const char *msg = win32_strerror(GetLastError());
+    lua_pushnil (L);
+    lua_pushstring (L, msg);
+    return 2;
+  }
+
+  lua_pushboolean(L, 1);
+  return 1;
+}
+
 
 void lua_init_platform (lua_State *L)
 {
@@ -252,6 +268,7 @@ void lua_init_platform (lua_State *L)
     { "raw_read",        io_raw_read       },
     { "raw_close",       io_raw_close      },
     { "setinherit",      io_setinherit     },
+    { "fsync",           io_fsync          },
     { 0,                 0                 },
   };
   luaL_register (L, "io", io_additions);

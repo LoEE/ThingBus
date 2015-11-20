@@ -136,6 +136,21 @@ static int io_setinherit (lua_State *L)
   return 0;
 }
 
+static int io_fsync (lua_State *L)
+{
+  int fd = luaLM_getfd (L, 1);
+
+  if(fsync(fd) < 0) {
+    const char *msg = strerror (errno);
+    lua_pushnil (L);
+    lua_pushstring (L, msg);
+    return 2;
+  }
+
+  lua_pushboolean(L, 1);
+  return 1;
+}
+
 
 int luaopen_posix_c(lua_State *L);
 int luaopen_socket_unix(lua_State *L);
@@ -160,6 +175,7 @@ void lua_init_platform_posix(lua_State *L)
     { "raw_write",  io_raw_write  },
     { "raw_close",  io_raw_close  },
     { "setinherit", io_setinherit },
+    { "fsync",      io_fsync      },
     { 0,            0             },
   };
   luaL_register (L, "io", io_additions);
