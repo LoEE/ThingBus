@@ -297,8 +297,6 @@ endpoint.new = constructor(function (self, ctx, udevh, intf)
   self.bEndpointAddress = udevh:get_sysattr_value'bEndpointAddress'
   self.type = udevh:get_sysattr_value'type'
   self.direction = udevh:get_sysattr_value'direction'
-  assert(_usb.clear_halt(self.f, fromhex(self.bEndpointAddress)))
-  assert(_usb.reset_ep(self.f, fromhex(self.bEndpointAddress)))
 end)
 
 function endpoint:write(data, callback)
