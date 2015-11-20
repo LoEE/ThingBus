@@ -214,7 +214,8 @@ static int io_raw_close (lua_State *L)
     return 2;
   }
 
-  return 0;
+  lua_pushboolean(L, 1);
+  return 1;
 }
 
 static int io_setinherit (lua_State *L)
@@ -231,7 +232,8 @@ static int io_setinherit (lua_State *L)
     return 2;
   }
 
-  return 0;
+  lua_pushboolean(L, 1);
+  return 1;
 }
 
 static int io_fsync (lua_State *L)
