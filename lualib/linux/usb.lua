@@ -114,6 +114,8 @@ end
 
 function device:set_configuration(cfgv)
   assert(self.f, "usb device not open")
+  -- work around a bug in USB3.0 xHCI and Linux:
+  _usb.set_configuration(self.f, 0)
   local ok, err, errno = _usb.set_configuration(self.f, cfgv)
   if errno == EBUSY then
     for _,intf in ipairs(self:find_interfaces()) do
