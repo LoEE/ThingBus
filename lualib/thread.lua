@@ -59,8 +59,10 @@ function handle_resume (thd, tstart, ok, ...)
     if h then
       h(thd, ...)
     else
-      print(string.format("error in %s: %s", Thread.getname (thd), select(1, ...) or "no message"))
-      print(debug.traceback(thd))
+      io.stderr:write(string.format("error in %s: %s\n%s\n",
+          Thread.getname (thd),
+          select(1, ...) or "no message",
+          debug.traceback(thd)))
     end
   else
     if select(1, ...) then
