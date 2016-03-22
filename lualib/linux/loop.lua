@@ -91,7 +91,7 @@ function loop.write (file, data)
     if type(file) ~= 'number' and file.send then
       local partial
       i, err, partial = file:send (data, start)
-      if err == 'timeout' and partial then
+      if (err == 'timeout' or err == "Socket is not connected") and partial then
         i = partial
         err = nil
       end
