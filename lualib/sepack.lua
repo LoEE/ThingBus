@@ -708,4 +708,35 @@ CT.watchdog.__tostring = CT._default.__tostring
 
 
 
+CT.phy = O(CT._default)
+
+CT.phy.PHYS = { [0] = "none", "rs485ch1", "rs485ch2", "rs232ch1", "rs232ch2", "mdb" }
+for k,v in pairs(CT.phy.PHYS) do CT.phy.PHYS[v] = k end
+
+function CT.phy:init()
+  self.assignments = {}
+end
+
+function CT.phy:setup(uart, phy)
+  checks('table', 'number', 'string')
+  if uart < 0 or uart > 2 then error('invalid UART id: '..tostring(uart)) end
+  local phyid = self.PHYS[phy]
+  if not phyid then error('invalid PHY: '..phy) end
+  self.assignments[uart] = phy
+  self:write(string.char(uart, phyid))
+end
+
+function CT.phy:on_connect()
+  CT._default.on_connect(self)
+  if self.assignments then
+    for k,v in pairs(self.assignments) do
+      self:setup(k, v)
+    end
+  end
+end
+
+CT.phy.__tostring = CT._default.__tostring
+
+
+
 return Sepack
