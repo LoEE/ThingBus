@@ -562,20 +562,47 @@ end
 CT.gpio.__tostring = CT._default.__tostring
 
 
+
 CT.notify = O(CT._default)
 
 function CT.notify:init()
+  self.pins = {}
   local pins = self.sepack:setup(self):split(' ')
   result = {}
   for i, pin in ipairs(pins) do
     local names, modes = pin:splitv(':')
     names = names:split('/')
-    result[i-1] = names[1]
-    for _, name in ipairs(names) do result[name] = i-1 end
+    local name = names[1]
+    result[i-1] = name
+    self.pins[name] = o()
+    self.pins['n'..name] = o()
+    for _, alias in ipairs(names) do result[alias] = i-1 end
   end
-  self.pins = result
+  self._pins = result
   self.debouncetimes = {}
-  return result
+end
+
+function CT.notify:_decode(data)
+  if data:startswith('n') or data:startswith('r') then
+    local changes = {}
+    for i=2,#data,2 do
+      local i, v = string.byte(data, i, i+1)
+      local name = self._pins[i]
+      v = v == 1
+      changes[name] = v
+    end
+    return changes
+  else
+    return data
+  end
+end
+
+function CT.notify:_inbox_put(changes)
+  if type(changes) ~= 'table' then error('malformed packet: '..D.repr(changes)) end
+  for name, v in pairs(changes) do
+    self.pins[name](v)
+    self.pins['n'..name](not v)
+  end
 end
 
 function CT.notify:on_connect()
@@ -584,11 +611,12 @@ function CT.notify:on_connect()
     for name, ms in pairs(self.debouncetimes) do
       self:setdebounce(name, ms)
     end
+    self:write'r'
   end
 end
 
 function CT.notify:_getpin(name)
-  local pin = self.pins[name]
+  local pin = self._pins[name]
   if type(pin) ~= 'number' then error('unknown notify pin: '..name) end
   return string.char(pin)
 end
@@ -600,6 +628,7 @@ function CT.notify:setdebounce(name, ms)
 end
 
 CT.notify.__tostring = CT._default.__tostring
+
 
 
 CT.adc = O(CT._default)
