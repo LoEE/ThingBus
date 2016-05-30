@@ -335,16 +335,18 @@ function Thread.install_loop (loop)
 
   function Timeout:fire()
     self.timer = nil
+    self.fired = true
     for i, thd in ipairs(self) do
       resume (thd, self)
     end
   end
 
   function Timeout:poll()
-    return not self.timer
+    return self.fired
   end
 
   function Timeout:cancel()
+    self.fired = nil
     if not self.timer then return end
     self.timer()
     self.timer = nil
