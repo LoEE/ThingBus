@@ -346,7 +346,7 @@ function Thread.install_loop (loop)
 
   function Timeout:cancel()
     if not self.timer then return end
-    self.timer:cancel()
+    self.timer()
     self.timer = nil
   end
 
