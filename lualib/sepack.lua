@@ -580,6 +580,7 @@ function CT.notify:init()
   end
   self._pins = result
   self.debouncetimes = {}
+  self:write'r'
 end
 
 function CT.notify:_decode(data)
