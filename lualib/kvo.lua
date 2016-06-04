@@ -141,6 +141,7 @@ function Observable:setcomputed(f, write)
     if dirty then mark() end
   end
 
+  self.update = update
   update()
   return self
 end
