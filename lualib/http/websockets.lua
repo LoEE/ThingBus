@@ -2,7 +2,6 @@ local T = require'thread'
 local Object = require'oo'
 local B = require'binary'
 local loop = require'loop'
-local json = require'json'
 
 local M = {}
 
@@ -112,14 +111,6 @@ function WebSocket:writeLoop()
       return
     end
   end
-end
-
-function WebSocket:argsToJS(...)
-  local args = {...}
-  for i=1,select('#',...) do
-    if args[i] == nil then args[i] = json.null end
-  end
-  return args
 end
 
 function WebSocket:sendText(data)
