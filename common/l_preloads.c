@@ -23,6 +23,8 @@ int luaopen_yajl(lua_State *L);
 int luaopen_ev(lua_State *L);
 int luaopen_brimworks_zip(lua_State *L);
 int luaopen_lpeg(lua_State *L);
+int luaopen_cjson(lua_State *L);
+int luaopen_cjson_safe(lua_State *L);
 
 const struct luaL_reg preloads[] = {
   { "bit32",          luaopen_bit32         },
@@ -40,5 +42,7 @@ const struct luaL_reg preloads[] = {
   { "zip",            luaopen_brimworks_zip },
   { "miniz",          luaopen_miniz         },
   { "lpeg",           luaopen_lpeg          },
+  { "cjson",          luaopen_cjson         },
+  { "cjson.safe",     luaopen_cjson_safe    },
   { 0,                0                     },
 };
