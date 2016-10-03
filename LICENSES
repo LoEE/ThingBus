@@ -1,0 +1,31 @@
+# STATIC:
+
+| luachecks               | MIT                 | [[https://github.com/SierraWireless/luasched | Website]] | [[https://github.com/SierraWireless/luasched/blob/master/COPYRIGHT | License text]] |
+| lua-zip                 | MIT                 | [[https://github.com/brimworks/lua-zip | Website]] | [[https://github.com/brimworks/lua-zip/blob/master/README | License text]] |
+| zip                     | BSD 3-clause        | [[https://nih.at/libzip/ | Website]] | [[https://nih.at/libzip/LICENSE.html | License text]] |
+| z                       | zlib                | [[http://www.zlib.net | Website]] | [[http://www.zlib.net/zlib_license.html | License text]] |
+| lua-socket              | MIT                 | [[http://w3.impa.br/~diego/software/luasocket/ | Website]] | [[http://www.lua.org/copyright.html | License text]] |
+| lua-filesystem          | MIT                 | [[https://keplerproject.github.io/luafilesystem/ | Website]] | [[http://www.lua.org/copyright.html | License text]] |
+| lua-md5                 | MIT                 | [[http://keplerproject.github.io/md5 | Website]] | [[http://www.lua.org/copyright.html | License text]] |
+| lua-yajl                | MIT                 | [[https://github.com/brimworks/lua-yajl | Website]] | [[https://github.com/brimworks/lua-yajl/blob/master/README | License text]] |
+| lua-ev                  | MIT                 | [[https://github.com/brimworks/lua-ev  | Website]]| [[https://github.com/brimworks/lua-ev/blob/master/README | License text]] |
+| ev                      | BSD 2-clause or GPL | [[http://software.schmorp.de/pkg/libev.html | Website]] | [[http://cvs.schmorp.de/libev/LICENSE?revision=1.11&view=markup | License text]] |
+| yajl                    | ISC                 | [[https://lloyd.github.io/yajl/ | Website]] | [[https://github.com/lloyd/yajl/blob/master/COPYING | License text]] |
+| sha2                    | BSD 3-clause or GPL | [[http://173.254.28.24/~brgladma//oldsite/cryptography_technology/sha/index.php | Website]] | (in the source code) |
+| modpbase64              | BSD 3-clause or MIT | [[https://github.com/client9/stringencoders | Website]] | [[https://github.com/client9/stringencoders/blob/master/LICENSE | License text]] |
+| lua-lpeg                | MIT                 | [[http://www.inf.puc-rio.br/~roberto/lpeg/ | Website]] | [[http://www.inf.puc-rio.br/~roberto/lpeg/#license | License text]] |
+| lua-cjson               | MIT                 | [[https://github.com/mpx/lua-cjson | Website]] | [[https://github.com/mpx/lua-cjson/blob/master/LICENSE | License text]] |
+| LuaNativeObjects        | MIT                 | [[https://github.com/Neopallium/LuaNativeObjects | Website]] | [[https://github.com/Neopallium/LuaNativeObjects/blob/master/COPYRIGHT | License text]] |
+| lua-posix               | MIT                 | [[https://github.com/luaposix/luaposix/tree/a90cbf12fbb6eb6b796df93f713ebce11b4c7983 | Website]] | [[https://github.com/luaposix/luaposix/blob/a90cbf12fbb6eb6b796df93f713ebce11b4c7983/COPYING | License text]] |
+| miniz                   | PD / unlicense      | [[https://code.google.com/archive/p/miniz/ | Website]] | [[http://unlicense.org | License text]] |
+| xtea                    | PD                  | [[http://www.cix.co.uk/~klockstone/xtea.pdf | Website]] | [[https://en.wikipedia.org/wiki/XTEA#Implementations | License text]] |
+| getopt for lua          | MIT                 | [[https://github.com/attractivechaos/klib/blob/master/lua/klib.lua | Website]] | (in the source code) |
+| ilua                    | MIT                 | [[https://github.com/ilua/ilua | Website]] | [[https://github.com/ilua/ilua/blob/master/LICENSE.txt | License text]] |
+| json.lua from ProsodyIM | MIT                 | [[http://hg.prosody.im/trunk/file/tip/util/json.lua | Website]] | [[http://hg.prosody.im/trunk/file/tip/COPYING | License text]] |
+| coxpcall                | MIT                 | [[http://keplerproject.github.io/coxpcall/ | Website]] | [[http://www.lua.org/copyright.html | License text]] |
+| lua-testy               | MIT                 | [[https://github.com/siffiejoe/lua-testy | Website]] | [[http://www.lua.org/copyright.html | License text]] |
+
+# DYNAMIC:
+
+| lua                     | MIT                 | [[http://w3.impa.br/~diego/software/luasocket/ | Website ]] | [[http://www.lua.org/copyright.html | License text]] |
+| udev                    | LGPL (libudev)      | [[https://www.kernel.org/pub/linux/utils/kernel/hotplug/udev-182.tar.xz | Website ]] | [[https://www.gnu.org/licenses/old-licenses/lgpl-2.1-standalone.html | License text]] |
