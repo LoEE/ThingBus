@@ -9,6 +9,7 @@ local _observers = newproxy()
 local _value = newproxy()
 local _seen = newproxy()
 local _version = newproxy()
+local _waiting = newproxy()
 local observe_callback = nil
 
 
@@ -219,12 +220,16 @@ function Observable:notify(new)
         local ok, err = T.sxpcall(function () fun(new) end, debug.traceback)
         if not ok then D.red('error in Observable watcher:\n\t'..err)() os.exit(2) end
       end
-      local n = #self
-      for i=n,1,-1 do
-        local thd = self[i]
-        if self[_version] ~= self[_seen][thd] then
-          self[_seen][thd] = self[_version]
-          T.resume (thd, self, new)
+      if self[_waiting] and next(self[_waiting]) then
+        local thds = {}
+        for thd in pairs(self[_waiting]) do thds[#thds+1] = thd end
+        for _,thd in ipairs(thds) do
+          if self[_waiting][thd] then
+            if self[_version] ~= self[_seen][thd] then
+              self[_seen][thd] = self[_version]
+              T.resume (thd, self, new)
+            end
+          end
         end
       end
     end)
@@ -245,12 +250,13 @@ function Observable:recv()
 end
 
 function Observable:register_thread(thd)
-  self[#self+1] = thd
+  local s = self[_waiting]
+  if not s then s = {} self[_waiting] = s end
+  s[thd] = true
 end
 
 function Observable:unregister_thread(thd)
-  local i = table.index(self, thd)
-  table.remove (self, i)
+  self[_waiting][thd] = nil
 end
 
 function Observable:__tostring()
