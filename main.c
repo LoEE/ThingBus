@@ -15,6 +15,7 @@
 #include "common/debug.h"
 #include "common/l_additions.h"
 #include "common/l_preloads.h"
+#include <ev.h>
 
 static const char *argv0 = NULL;
 #define EXIT_ON_LUA_ERROR(msg) ({ eprintf ("%s: " msg ": error: %s\n", argv0, lua_tostring (L, -1)); exit (4); })
@@ -37,21 +38,26 @@ static int traceback (lua_State *L)
 void enable_keyboard_interrupt_handler (void);
 void disable_keyboard_interrupt_handler (void);
 
-static lua_State *globalL;
+ev_async keyboard_interrupt_watcher;
+
+static int should_break = 0;
 
 static void lbreak (lua_State *L, lua_Debug *ar)
 {
+  if (!should_break) return;
   lua_sethook (L, NULL, 0, 0);
   enable_keyboard_interrupt_handler();
   luaL_error (L, "interrupt");
 }
 
+void keyboard_interrupt_watcher_cb(struct ev_loop *loop, ev_async *w, int revents) {
+  ev_break(EV_DEFAULT, EVBREAK_ALL);
+}
+
 void keyboard_interrupt(void)
 {
-  lua_sethook (globalL, lbreak, LUA_MASKCOUNT, 1);
-  if (interrupt_pipe >= 0)
-    if (write(interrupt_pipe, "I", 1) < 1)
-      EXIT_ON_POSIX_ERROR("interrupt_pipe write", 5);
+  should_break = 1;
+  ev_async_send(EV_DEFAULT, &keyboard_interrupt_watcher);
   disable_keyboard_interrupt_handler();
 }
 
@@ -70,8 +76,10 @@ int main (int argc, char **argv)
 
   luaLM_create_proxy_table (L);
 
-  globalL = L;
-  //enable_keyboard_interrupt_handler();
+  ev_async_init(&keyboard_interrupt_watcher, keyboard_interrupt_watcher_cb);
+  ev_async_start(EV_DEFAULT, &keyboard_interrupt_watcher);
+  lua_sethook (L, lbreak, LUA_MASKCOUNT, 10000);
+  enable_keyboard_interrupt_handler();
 
   luaL_openlibs(L);
 
