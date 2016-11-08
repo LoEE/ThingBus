@@ -1,1 +1,3 @@
-../p-openwrt-mips/strip
+#!/bin/sh
+. ./p-openwrt-mips-uClibc/env
+mips-openwrt-linux-strip -d "$@"

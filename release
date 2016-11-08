@@ -1,8 +1,9 @@
 #!/bin/sh
 
-make pkg/linux pkg/linux64 pkg/android-16-arm pkg/osx64 pkg/osx pkg/linux-armhf pkg/win32 pkg/win64
-./remote jpc@green openwrt-mips pkg
-./remote jpc@green openwrt-mips-uClibc pkg
+make pkg/linux pkg/linux64 pkg/android-16-arm pkg/osx64 pkg/osx \
+     pkg/linux-armhf pkg/win32 pkg/win64 pkg/openwrt-mips-uClibc
+#./remote jpc@green openwrt-mips pkg
+#./remote jpc@green openwrt-mips-uClibc pkg
 
 DATE=$(date +%Y.%m.%d)
 DIR=thb-$DATE
