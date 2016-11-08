@@ -766,4 +766,31 @@ CT.phy.__tostring = CT._default.__tostring
 
 
 
+CT.pwm = O(CT._default)
+
+CT.pwm.VALID_IDS = { [1] = true, [2] = true, [3] = true }
+
+function CT.pwm:setup(channels)
+  checks('table', 'string')
+  local chnmask = 0
+  for i=1,#channels do
+    local id = tonumber(string.sub(channels, i, i))
+    if not self.VALID_IDS[id] then error('invalid PWM channel id: '..id.. ' at position: '..i) end
+    chnmask = chnmask + 2^(id-1)
+  end
+  self.channels = channels
+  return checkerr(self.sepack:setup(self, chnmask))
+end
+
+function CT.pwm:on_connect()
+  CT._default.on_connect(self)
+  if self.channels then
+    self:setup(self.channels)
+  end
+end
+
+CT.pwm.__tostring = CT._default.__tostring
+
+
+
 return Sepack
