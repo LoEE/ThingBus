@@ -63,6 +63,7 @@ function handle_resume (thd, tstart, ok, ...)
           Thread.getname (thd),
           select(1, ...) or "no message",
           debug.traceback(thd)))
+      os.exit(2)
     end
   else
     if select(1, ...) then
@@ -97,7 +98,10 @@ function handle_resume (thd, tstart, ok, ...)
             current_thread = 'thread:       nice'
             nice_list[v] = nil
             local ok, err = xpcall(v, debug.traceback)
-            if not ok then print("error in idle callback: "..err) end
+            if not ok then
+              print("error in idle callback: "..err)
+              os.exit(2)
+            end
           else
             break
           end
