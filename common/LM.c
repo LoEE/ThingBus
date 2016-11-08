@@ -133,6 +133,7 @@ int luaLM_getfd (lua_State *L, int i)
   }
   { // Lua file object (userdata)
     FILE *f = *(FILE**)luaL_checkudata(L, 1, LUA_FILEHANDLE);
+    if (!f) return -1;
     return fileno(f);
   }
   return -1;
