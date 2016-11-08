@@ -102,10 +102,7 @@ function Sepack:_addchn(id, name, forceinit)
     chn = CT:new(self, id, name)
     self.channels[name] = chn
     self.channels[id] = chn
-    forceinit = true
-  end
-  chn:on_connect()
-  if forceinit then
+    chn:on_connect()
     chn:init()
   end
 end
