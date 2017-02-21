@@ -151,13 +151,64 @@ static int io_fsync (lua_State *L)
   return 1;
 }
 
-
-int luaopen_posix_c(lua_State *L);
+int luaopen_posix_ctype(lua_State *L);
+int luaopen_posix_dirent(lua_State *L);
+int luaopen_posix_errno(lua_State *L);
+int luaopen_posix_fcntl(lua_State *L);
+int luaopen_posix_fnmatch(lua_State *L);
+int luaopen_posix_glob(lua_State *L);
+int luaopen_posix_grp(lua_State *L);
+int luaopen_posix_libgen(lua_State *L);
+int luaopen_posix_poll(lua_State *L);
+int luaopen_posix_pwd(lua_State *L);
+int luaopen_posix_sched(lua_State *L);
+int luaopen_posix_signal(lua_State *L);
+int luaopen_posix_stdio(lua_State *L);
+int luaopen_posix_stdlib(lua_State *L);
+int luaopen_posix_sys_msg(lua_State *L);
+int luaopen_posix_sys_resource(lua_State *L);
+int luaopen_posix_sys_socket(lua_State *L);
+int luaopen_posix_sys_stat(lua_State *L);
+int luaopen_posix_sys_time(lua_State *L);
+int luaopen_posix_sys_times(lua_State *L);
+int luaopen_posix_sys_utsname(lua_State *L);
+int luaopen_posix_sys_wait(lua_State *L);
+int luaopen_posix_syslog(lua_State *L);
+int luaopen_posix_termio(lua_State *L);
+int luaopen_posix_time(lua_State *L);
+int luaopen_posix_unistd(lua_State *L);
+int luaopen_posix_utime(lua_State *L);
 int luaopen_socket_unix(lua_State *L);
 const struct luaL_reg platform_posix_preloads[] = {
-  { "posix",          luaopen_posix_c     },
-  { "socket.unix",    luaopen_socket_unix },
-  { 0,                0                   },
+  { "posix.ctype",        luaopen_posix_ctype        },
+  { "posix.dirent",       luaopen_posix_dirent       },
+  { "posix.errno",        luaopen_posix_errno        },
+  { "posix.fcntl",        luaopen_posix_fcntl        },
+  { "posix.fnmatch",      luaopen_posix_fnmatch      },
+  { "posix.glob",         luaopen_posix_glob         },
+  { "posix.grp",          luaopen_posix_grp          },
+  { "posix.libgen",       luaopen_posix_libgen       },
+  { "posix.poll",         luaopen_posix_poll         },
+  { "posix.pwd",          luaopen_posix_pwd          },
+  { "posix.sched",        luaopen_posix_sched        },
+  { "posix.signal",       luaopen_posix_signal       },
+  { "posix.stdio",        luaopen_posix_stdio        },
+  { "posix.stdlib",       luaopen_posix_stdlib       },
+  { "posix.sys.msg",      luaopen_posix_sys_msg      },
+  { "posix.sys.resource", luaopen_posix_sys_resource },
+  { "posix.sys.socket",   luaopen_posix_sys_socket   },
+  { "posix.sys.stat",     luaopen_posix_sys_stat     },
+  { "posix.sys.time",     luaopen_posix_sys_time     },
+  { "posix.sys.times",    luaopen_posix_sys_times    },
+  { "posix.sys.utsname",  luaopen_posix_sys_utsname  },
+  { "posix.sys.wait",     luaopen_posix_sys_wait     },
+  { "posix.syslog",       luaopen_posix_syslog       },
+  { "posix.termio",       luaopen_posix_termio       },
+  { "posix.time",         luaopen_posix_time         },
+  { "posix.unistd",       luaopen_posix_unistd       },
+  { "posix.utime",        luaopen_posix_utime        },
+  { "socket.unix",        luaopen_socket_unix        },
+  { 0,                    0                          },
 };
 
 void lua_init_platform_posix(lua_State *L)
