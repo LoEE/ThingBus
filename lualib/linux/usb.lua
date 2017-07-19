@@ -308,11 +308,16 @@ function endpoint:write(data, callback)
 end
 
 function endpoint:read(n, callback)
-  local token, err, errno = _usb.bulk_read(self.f, fromhex(self.bEndpointAddress), n) -- 0x83
-  if not token then
-    return callback(nil, err, true, errno)
+  -- fd might be already closed with asynchronous disconnection
+  if not io.getfd(self.f) then
+    callback(nil, "ENODEV", true, 19)
+  else
+    local token, err, errno = _usb.bulk_read(self.f, fromhex(self.bEndpointAddress), n) -- 0x83
+    if not token then
+      return callback(nil, err, true, errno)
+    end
+    self.dev.callbacks[token] = callback
   end
-  self.dev.callbacks[token] = callback
 end
 
 function endpoint.__tostring(s)
