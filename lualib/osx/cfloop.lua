@@ -48,6 +48,8 @@ function loop.write (file, data)
     end
     if not i then
       return i, err
+    elseif i == 0 then
+      return false, 'zero bytes written'
     elseif i < len then
       start = i + 1
       loop.on_writeable (file, function () return T.resume (thd, true) end)
