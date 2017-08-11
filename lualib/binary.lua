@@ -2,6 +2,7 @@ local M = require'_binary'
 local bit32 = require'bit32'
 
 function M.packbits(obj, fmt)
+  checks('table', 'string')
   local result = 0
   local parts = string.split(fmt)
   for _,part in ipairs(parts) do
@@ -53,6 +54,7 @@ function M.flat (t)
 end
 
 function M.bin2hex (data, n, spacer, mode)
+  checks('string', 'number?', 'string?', 'string?')
   n = n or 2
   if n == 0 then n = #data end
   spacer = spacer or " "
@@ -67,23 +69,23 @@ function M.bin2hex (data, n, spacer, mode)
 end
 
 function M.hex2bin (data)
+  checks('string')
   return (data:gsub ("[^0-9a-fA-F]+", ""):gsub ("..", function (str) return string.char(tonumber(str, 16)) end))
 end
 
 function M.hex (n, prefix)
+  checks('number|string', '?string')
   prefix = prefix or '0x'
   local s = string.format ("%x", n)
-  local p
-  if #s % 2 == 0 then
-    p = prefix
-  else
-    p = prefix .. "0"
+  if #s % 2 ~= 0 then
+    prefix = prefix .. "0"
   end
-  return p .. s
+  return prefix .. s
 end
 
 function M.binary_decoder (n, le)
   return function (bs, s)
+    checks('string', 'number')
     local s = s or 1
     local e = s + (n - 1)
     local step = 1
@@ -101,6 +103,7 @@ end
 
 function M.binary_encoder (n, le)
   return function (x)
+    checks('number')
     local s = n
     local e = 1
     local step = -1

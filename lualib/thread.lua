@@ -357,11 +357,13 @@ function Thread.install_loop (loop)
   end
 
   function Timeout:restart(time)
+    checks('?number')
     self:cancel()
     self:init(time or self.time)
   end
 
   function Timeout:tick(time)
+    checks('?number')
     if self:poll() then
       self:restart(time)
       return true
