@@ -323,6 +323,7 @@ function Thread.install_loop (loop)
   end
 
   local Timeout = Source:inherit()
+  Timeout.__type = 'Timeout'
   Thread.Timeout = Timeout
 
   function Timeout:init(seconds)
@@ -357,11 +358,13 @@ function Thread.install_loop (loop)
   end
 
   function Timeout:restart(time)
+    checks('Timeout', '?number')
     self:cancel()
     self:init(time or self.time)
   end
 
   function Timeout:tick(time)
+    checks('Timeout', '?number')
     if self:poll() then
       self:restart(time)
       return true
