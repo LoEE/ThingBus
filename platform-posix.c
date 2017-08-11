@@ -87,7 +87,7 @@ static int io_raw_write (lua_State *L)
   int fd = luaLM_checkfd(L, 1);
   size_t n = 0;
   const char *s = luaL_checklstring(L, 2, &n);
-  size_t off = luaL_optnumber(L, 3, 0) - 1;
+  size_t off = luaL_optnumber(L, 3, 1) - 1;
   if (off > n) off = n;
 
   int ret = write(fd, s + off, n - off);
