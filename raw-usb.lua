@@ -187,9 +187,12 @@ T.go(write_usb, fdin)
 
 local function open_device(d)
   local ok, err = T.spcall(d.open, d)
-  if not ok and err:endswith("USBDeviceOpen: (iokit/common) exclusive access and device already open (0xe00002c5)") then -- FIXME
-    eprintf("device busy: %s [%s]\n", d.product, d.serial)
-    return false
+  if not ok then
+    if err:endswith("USBDeviceOpen: (iokit/common) exclusive access and device already open (0xe00002c5)") then -- FIXME
+      eprintf("device busy: %s [%s]\n", d.product, d.serial)
+    else
+      return error(err)
+    end
   end
   local errc = E[errno]
   local ok, err = d:set_configuration(2)
