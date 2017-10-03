@@ -54,7 +54,7 @@ function M.flat (t)
 end
 
 function M.bin2hex (data, n, spacer, mode)
-  checks('string', 'number?', 'string?', 'string?')
+  checks('string', '?number', '?string', '?string')
   n = n or 2
   if n == 0 then n = #data end
   spacer = spacer or " "
@@ -85,7 +85,7 @@ end
 
 function M.binary_decoder (n, le)
   return function (bs, s)
-    checks('string', 'number')
+    checks('string', '?number')
     local s = s or 1
     local e = s + (n - 1)
     local step = 1
