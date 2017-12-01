@@ -33,6 +33,13 @@ _G.xpcall = nil
 local weakmt = { __mode = 'k' }
 local thread_names = setmetatable ({}, weakmt)
 local thread_handlers = setmetatable ({}, weakmt)
+local function default_thread_handler(thd, ...)
+  io.stderr:write(string.format("error in %s: %s\n%s\n",
+      Thread.getname (thd),
+      (...) or "no message",
+      debug.traceback(thd)))
+  os.exit(2)
+end
 local thread_runtimes = setmetatable ({}, weakmt)
 local thread_mailboxes = setmetatable ({}, weakmt)
 
@@ -55,14 +62,11 @@ function handle_resume (thd, tstart, ok, ...)
   local tend = Thread.now()
   add_runtime (thd, tend - tstart)
   if not ok then
-    local h = thread_handlers[thd]
-    if h then
-      h(thd, ...)
-    else
-      io.stderr:write(string.format("error in %s: %s\n%s\n",
-          Thread.getname (thd),
-          select(1, ...) or "no message",
-          debug.traceback(thd)))
+    local handler = thread_handlers[thd] or default_thread_handler
+    local ok, err = Thread.spcall(handler, thd, ...)
+    if not ok then
+      io.strerr:write(string.format("error in thread error handler for %s: %s\n",
+        Thread.getname (thd), err))
       os.exit(2)
     end
   else
@@ -168,9 +172,14 @@ end
 Thread.getname = getname
 
 function Thread.sethandler (thd, fun)
-  assert(type(thd) == 'thread')
-  assert(type(fun) == 'function')
-  thread_handlers[thd] = fun
+  checks('thread|string', 'function')
+  if type(thd) == 'thread' then
+    thread_handlers[thd] = fun
+  elseif thd == 'default' then
+    default_thread_handler = fun
+  else
+    error("sethandler: invalid argument #1 expected thread or 'default' got: "..tostring(thd))
+  end
 end
 
 function Thread.recv (srcs, poll)
