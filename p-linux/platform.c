@@ -50,7 +50,7 @@ static int os_time_monotonic (lua_State *L)
 {
   struct timespec ts;
   int ret = clock_gettime(CLOCK_MONOTONIC, &ts);
-  if (ret < 0) EXIT_ON_POSIX_ERROR("cannot get the CLOCK_MONOTONIC_RAW time", 1);
+  if (ret < 0) EXIT_ON_POSIX_ERROR("cannot get the CLOCK_MONOTONIC time", 1);
   double t = ts.tv_sec + ts.tv_nsec / 1.0e9;
   lua_pushnumber (L, t);
   return 1;
