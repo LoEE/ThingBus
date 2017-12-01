@@ -48,10 +48,64 @@ local function default_thread_handler(thd, ...)
   os.exit(2)
 end
 local thread_runtimes = setmetatable ({}, weakmt)
+local thread_latencies = {}
 local thread_mailboxes = setmetatable ({}, weakmt)
 
+local function setname (name, thd)
+  checks('string', '?thread')
+  if not thd then thd = current() end
+  thread_names[thd] = name
+end
+Thread.setname = setname
+
+local function getname (thd)
+  checks('?thread')
+  if not thd then thd = current() end
+  return thread_names[thd] or ('<'..tostring(thd):sub(9)..'>')
+end
+Thread.getname = getname
+
+local total_runtime = 0
 local function add_runtime (thd, time)
+  thd = getname(thd)
+  if time > (thread_latencies[thd] or 0) then thread_latencies[thd] = time end
   thread_runtimes[thd] = (thread_runtimes[thd] or 0) + time
+  total_runtime = total_runtime + time
+end
+
+Thread.thread_timing_info = function ()
+  local latencies = thread_latencies
+  thread_latencies = {}
+  return total_runtime, thread_runtimes, latencies
+end
+
+local function timing_sort(tab)
+  local r = {}
+  for k, v in pairs(tab) do
+    r[#r+1] = { k, v }
+  end
+  table.sort(r, function (a, b) return a[2] > b[2] end)
+  return r
+end
+
+Thread.thread_timing_report = function ()
+  local start = Thread.now()
+  local total, run, latency = Thread.thread_timing_info()
+  run = timing_sort(run) latency = timing_sort(latency)
+  io.stderr:write("Highest runtimes:\n")
+  for i=1,10 do
+    if not run[i] then break end
+    io.stderr:write(string.format("%6.2f ms %4.1f %s\n", run[i][2] * 1000, run[i][2] / total * 100, run[i][1]))
+  end
+  io.stderr:write(string.format("Total runtime: %.2f ms\n", total * 1000))
+  io.stderr:write('\n')
+  io.stderr:write("Highest latencies:\n")
+  for i=1,10 do
+    if not latency[i] then break end
+    io.stderr:write(string.format("%6.2f ms %s\n", latency[i][2] * 1000, latency[i][1]))
+  end
+  io.stderr:write('\n')
+  io.stderr:write(string.format("Timing report time: %.2f ms\n", (Thread.now() - start) * 1000))
 end
 
 local function get_mailbox (thd)
@@ -178,8 +232,11 @@ end
 
 function Thread.go (fun, ...)
   local thd
+  local src = debug.getinfo(2, "Sl")
+  src = '<'..string.sub(src.source, 2)..':'..src.currentline..'>'
   if not oldcurrent() then
     thd = create(fun)
+    setname(src, thd)
     resume(thd, ...)
   else
     if select('#', ...) > 0 then
@@ -188,22 +245,11 @@ function Thread.go (fun, ...)
       fun = function () return ofun(unpack(args)) end
     end
     thd = create (fun)
+    setname(src, thd)
     busy_list[thd] = true
   end
   return thd
 end
-
-local function setname (name, thd)
-  if not thd then thd = current() end
-  thread_names[thd] = name
-end
-Thread.setname = setname
-
-local function getname (thd)
-  if not thd then thd = current() end
-  return thread_names[thd] or ('<'..tostring(thd):sub(9)..'>')
-end
-Thread.getname = getname
 
 function Thread.sethandler (thd, fun)
   checks('thread|string', 'function')
@@ -473,7 +519,10 @@ function Thread.agent ()
   local agent = {
     [ThreadMailbox] = apply
   }
+  local src = debug.getinfo(2, "Sl")
+  src = '<'..string.sub(src.source, 2)..':'..src.currentline..'>'
   local thd = Thread.go (function ()
+    setname(src)
     while true do Thread.recv(agent) end
   end)
   local function cast (self, thunk, ...)
