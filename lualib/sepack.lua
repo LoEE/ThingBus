@@ -367,6 +367,7 @@ CT.uart.__tostring = CT._default.__tostring
 
 
 CT.gpio = O(CT._default)
+add_threadsafety(CT.gpio)
 
 do
   local chainer = O()
