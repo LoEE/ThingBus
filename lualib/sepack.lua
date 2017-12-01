@@ -171,6 +171,38 @@ end
 
 
 
+function add_threadsafety(channel)
+  function channel:_inbox_put(data)
+    local chn = table.remove(self.reply_chns, 1)
+    chn:put(data)
+  end
+
+  function channel:on_connect()
+    self.reply_chns = {}
+  end
+
+  function channel:on_disconnect()
+    local rc = self.reply_chns
+    self.reply_chns = nil
+    for i=1,#rc do rc[i]:put("") end
+  end
+
+  function channel:recv()
+    error("only use xchg on the "..self.name.." channel")
+  end
+
+  function channel:xchg(data)
+    local chn = T.Mailbox:new()
+    local rc = self.reply_chns
+    if not rc then return "" end
+    rc[#rc+1] = chn
+    self:write(data, 0)
+    return chn:recv()
+  end
+end
+
+
+
 local CT = {}
 Sepack.channeltypes = CT
 
@@ -258,6 +290,7 @@ end
 
 
 CT.control = O(CT._default)
+add_threadsafety(CT.control)
 
 function CT.control:init()
   self.inbox = nil -- only xchg should be used
@@ -265,34 +298,6 @@ function CT.control:init()
   names = string.split(names, ' ')
   table.remove(names, 1) -- drop 'control'
   self.channel_names = names
-end
-
-function CT.control:_inbox_put(data)
-  local chn = table.remove(self.reply_chns, 1)
-  chn:put(data)
-end
-
-function CT.control:on_connect()
-  self.reply_chns = {}
-end
-
-function CT.control:on_disconnect()
-  local rc = self.reply_chns
-  self.reply_chns = nil
-  for i=1,#rc do rc[i]:put("") end
-end
-
-function CT.control:recv()
-  error("only use xchg on the control channel")
-end
-
-function CT.control:xchg(data)
-  local chn = T.Mailbox:new()
-  local rc = self.reply_chns
-  if not rc then return "" end
-  rc[#rc+1] = chn
-  self:write(data, 0)
-  return chn:recv()
 end
 
 CT.control.__tostring = CT._default.__tostring
