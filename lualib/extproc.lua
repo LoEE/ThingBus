@@ -40,6 +40,7 @@ function ExtProc:init (args, _log)
   self.inbox = T.Mailbox:new()
   self.outbox = T.Mailbox:new()
   self.status = o(false)
+  self.serial = o()
   T.go(self._out_loop, self)
 
   self.accept_watcher = loop.on_acceptable (lsock, function () T.go(self._handle_connect, self) end, true)
@@ -114,8 +115,10 @@ function ExtProc:_in_loop(infd)
       self.log:dbg('< '..string.format('%s : %s', B.bin2hex(data), D.repr(data)))
       self.inbox:put(data)
     elseif cmd then
+      local cmd, serial = string.splitv(cmd, ' ')
       self.log:dbg('? '..cmd)
       self.status(cmd)
+      self.serial(serial)
     else
       if err == 'eof' then
         self.log:dbg('< eof')
