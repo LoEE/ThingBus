@@ -211,7 +211,7 @@ local function open_device(d)
   assert(intf:open())
   pin  = assert(intf:find_endpoints{'bulk', 'in'}[1])
   pout = assert(intf:find_endpoints{'bulk', 'out'}[1])
-  loop.write(fdout, "connect\n")
+  loop.write(fdout, "connect "..d.serial.."\n")
   T.go(read_usb, fdout)
   return true
 end

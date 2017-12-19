@@ -36,6 +36,13 @@ Sepack.new = O.constructor(function (self, ext, _log)
   self.log = _log or log.null
   self.ext = ext
   self.connected = o()
+  self.serial = ext.serial
+  self.serial_number = o.computed(function ()
+    local sn = self.serial()
+    if not sn then return nil end
+    local num = string.match(sn, ".+-([0-9]+)")
+    return tonumber(num)
+  end)
   self.channels = {}
 
   self.ext.status:watch(function (...) self:_ext_status(...) end)
