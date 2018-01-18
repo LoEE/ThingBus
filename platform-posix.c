@@ -65,7 +65,7 @@ static int io_raw_read (lua_State *L)
 {
   int fd = luaLM_checkfd (L, 1);
 
-  char buffer[4096];
+  char buffer[100*1024];
   int ret = read (fd, buffer, sizeof(buffer));
   if (!ret) { // EOF
     lua_pushnil (L);
