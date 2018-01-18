@@ -221,7 +221,7 @@ function Reply.write(self, data)
 end
 
 function M.http_handler (srv, router, c)
-  D.cyan(socketid(c) .. ' opened')()
+  -- D.cyan(socketid(c) .. ' opened')()
   local inb = bio.IBuf:new(c)
   local n = 0
   while true do
@@ -267,7 +267,7 @@ function M.http_handler (srv, router, c)
     if req.version == 'HTTP/1.0' or req:header'Connection' == 'close' then break end
   end
   c:close()
-  D.cyan(socketid(c) .. ' closed')()
+  -- D.cyan(socketid(c) .. ' closed')()
   srv[c] = nil
 end
 
