@@ -594,6 +594,7 @@ function CT.notify:init()
 end
 
 function CT.notify:_decode(data)
+  if not self._pins then return {} end
   if data:startswith('n') or data:startswith('r') then
     local changes = {}
     for i=2,#data,2 do
