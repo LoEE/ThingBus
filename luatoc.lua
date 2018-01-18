@@ -5,7 +5,6 @@ local out = {[[// Generated file, see luatoc.lua
 static char code[] = "\n\n\n\n\n"
 ]]}
 local dep = {}
-local lfs = require'lfs'
 
 local function mod_from_fname(fname)
   return string.gsub(string.sub(fname, 1, -5), "/", ".")
@@ -32,24 +31,14 @@ local function add_module(fname, modname)
   out[#out+1] = '  "end\\n"\n'
 end
 
-local function add_moddir(name)
-  for fname in lfs.dir(name) do
-    if fname:sub(-4, -1) == '.lua' then
-      add_module(name..fname, mod_from_fname(fname))
-    end
-  end
-end
-
 local func_name = table.remove(arg, 1)
 
 dep[#dep+1] = string.format("%s.c:", func_name)
 
 for i,name in ipairs(arg) do
-  if name:sub(-1,-1) == '/' then
-    add_moddir(name)
-  else
-    add_module(name)
-  end
+  -- strip directory names
+  local modname = mod_from_fname(string.match(name, "([^/]*)$"))
+  add_module(name, modname)
 end
 
 out[#out+1] = [[  ;

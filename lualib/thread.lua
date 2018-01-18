@@ -88,7 +88,9 @@ function handle_resume_result (thd, tstart, ok, ...)
           local l = callback_list
           callback_list = {}
           for i=1,#l do
-            local ok, err = xpcall(l[i], debug.traceback) if not ok then local here = #debug.traceback() - 16 + 27
+            local ok, err = xpcall(l[i], debug.traceback)
+            if not ok then local here = #debug.traceback() - 16 + 27
+              -- FIXME: use default_thread_handler
               print("error in queued callback: "..err:sub(1,#err - here))
               os.exit(2)
             end
@@ -104,6 +106,7 @@ function handle_resume_result (thd, tstart, ok, ...)
             nice_list[v] = nil
             local ok, err = xpcall(v, debug.traceback)
             if not ok then
+              -- FIXME: use default_thread_handler
               print("error in idle callback: "..err)
               os.exit(2)
             end

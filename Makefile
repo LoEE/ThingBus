@@ -65,7 +65,7 @@ pkg: install
 	rm -rf install/$(PKG)
 
 l_init.c: luatoc.lua
-	@./quiet "$@" lua -lluarocks.loader $< l_init extensions.lua lualib-vendor/ +l_init.lua
+	@./quiet "$@" lua $< l_init extensions.lua lualib-vendor/* +l_init.lua
 
 $(EXE)-$P$(EXE_SUFFIX): $(OBJS) $(LD)
 	@$(LD) $@ $(OBJS)
