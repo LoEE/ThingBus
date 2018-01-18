@@ -264,7 +264,7 @@ function M.http_handler (srv, router, c)
       req:log ("%s %s [%d in:%d out:%d t:%.2f]", req.method, req.origurl, reply.status,
                                                  #data + 4 + bodylen, reply.hlen + reply.clen, (etime - stime) * 1000)
     end
-    if req.version == 'HTTP/1.0' then break end
+    if req.version == 'HTTP/1.0' or req:header'Connection' == 'close' then break end
   end
   c:close()
   D.cyan(socketid(c) .. ' closed')()
