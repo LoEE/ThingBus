@@ -6,6 +6,7 @@ local create = coroutine.create
 local yield = coroutine.yield
 local oldresume = coroutine.resume
 local oldcurrent = coroutine.running
+local oldyield = coroutine.yield
 
 -- Make sure we only return threads that we created (resumed).
 -- This is required for recvs inside a coxpcall to work:
@@ -57,8 +58,8 @@ local busy_list = {}
 local callback_list = {}
 local nice_list = {}
 local Idle = { list = nice_list, call = function (f) assert(type(f) == 'function', 'function expected') nice_list[f] = true end }
-local handle_resume, resume
-function handle_resume (thd, tstart, ok, ...)
+local handle_resume_result, resume
+function handle_resume_result (thd, tstart, ok, ...)
   local tend = Thread.now()
   add_runtime (thd, tend - tstart)
   if not ok then
@@ -115,15 +116,39 @@ function handle_resume (thd, tstart, ok, ...)
     end
   end
 end
+local main_thread_resume_arguments
 function resume (thd, ...)
   local cthd = oldcurrent()
+  -- print("resume", cthd, thd, (...))
   if not cthd then
     current_thread = thd
-    return handle_resume (thd, Thread.now(), oldresume (thd, ...))
+    if thd == 'thread:       main' then
+      -- io.stderr:write('Thread.loop_stop() not cthd\n')
+      main_thread_resume_arguments = {...}
+      return Thread.loop_stop()
+    else
+      return handle_resume_result (thd, Thread.now(), oldresume (thd, ...))
+    end
   else
     if cthd == thd then error('a thread cannot resume itself', 2) end
     busy_list[current()] = true
-    return yield (thd, ...) -- return to trampoline
+    if thd == 'thread:       main' then
+      -- print('Thread.loop_stop() cthd', current())
+      main_thread_resume_arguments = {...}
+      Thread.loop_stop()
+      return oldyield ()
+    else
+      return oldyield (thd, ...) -- return to trampoline
+    end
+  end
+end
+function yield (...)
+  if not oldcurrent() then
+    -- io.stderr:write('Thread.loop_run()\n')
+    Thread.loop_run()
+    return unpack(main_thread_resume_arguments)
+  else
+    return oldyield(...)
   end
 end
 
@@ -330,6 +355,9 @@ function Thread.install_loop (loop)
     local ok, err, arg = yield()
     if not ok then cancel() return yield() end
   end
+
+  Thread.loop_run = loop.run
+  Thread.loop_stop = function () loop.default:unloop() end
 
   local Timeout = Source:inherit()
   Timeout.__type = 'Timeout'
