@@ -605,7 +605,7 @@ function CT.notify:_decode(data)
     end
     return changes
   else
-    return data
+    return {}
   end
 end
 
