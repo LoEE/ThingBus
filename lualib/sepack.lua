@@ -589,8 +589,6 @@ function CT.notify:init()
     for _, alias in ipairs(names) do result[alias] = i-1 end
   end
   self._pins = result
-  self.debouncetimes = {}
-  self:write'r'
 end
 
 function CT.notify:_decode(data)
@@ -634,6 +632,7 @@ function CT.notify:_getpin(name)
 end
 
 function CT.notify:setdebounce(name, ms)
+  if not self.debouncetimes then self.debouncetimes = {} self:write'r' end
   local pin = self:_getpin(name)
   checkerr(self.sepack:setup(self, 't'..pin..B.enc16BE(ms)))
   self.debouncetimes[name] = ms
