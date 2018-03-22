@@ -1,4 +1,3 @@
-require 'coxpcall'
 local Object = require'oo'
 local socket = require'socket'
 
@@ -24,10 +23,17 @@ local Thread = {
   current = current,
   spcall = pcall,
   sxpcall = xpcall,
-  pcall = copcall,
-  xpcall = coxpcall,
   identity = function (...) return ... end,
 }
+if not jit then
+  require 'coxpcall'
+  Thread.pcall = copcall
+  Thread.xpcall = coxpcall
+else
+  Thread.pcall = pcall
+  Thread.xpcall = xpcall
+end
+
 _G.pcall = nil
 _G.xpcall = nil
 
