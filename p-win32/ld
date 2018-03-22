@@ -2,4 +2,4 @@
 . ./cfg
 TARGET="$1"
 shift
-./quiet "$TARGET" p-$P/gcc  -o "$TARGET" "$@" -Lp-$P/lib $LDFLAGS -llua-winapi -llua -lpsapi -lMpr -lwsock32 -lshlwapi
+./quiet "$TARGET" p-$P/gcc  -o "$TARGET" "$@" -Lp-$P/lib $LDFLAGS -llua-winapi -llua -lpsapi -lMpr -lwsock32 -lWs2_32 -lshlwapi
