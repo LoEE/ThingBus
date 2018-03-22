@@ -302,6 +302,7 @@ add_threadsafety(CT.control)
 function CT.control:init()
   self.inbox = nil -- only xchg should be used
   local names = self.sepack:setup(self)
+  assert(#names > 0)
   names = string.split(names, ' ')
   table.remove(names, 1) -- drop 'control'
   self.channel_names = names
@@ -534,7 +535,9 @@ do
 end
 
 function CT.gpio:init()
-  local pins = self.sepack:setup(self):split(' ')
+  local pins = self.sepack:setup(self)
+  assert(#pins > 0)
+  pins = pins:split(' ')
   result = {}
   for i, pin in ipairs(pins) do
     local names, modes = pin:splitv(':')
