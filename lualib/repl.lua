@@ -33,18 +33,26 @@ setmetatable(ns, {__index = _G})
 M.ns = ns
 
 local function wrap (data, src, chunk)
-  setfenv(chunk, ns)
   return function ()
     interactions:publish{'cmd', src, data}
     handleReturn (src, T.xpcall (chunk, function (...) return ... end))
   end
 end
 
-function M.compile (data, src)
-  local chunk, err = loadstring ("return " .. data, "stdin")
-  if err then chunk, err = loadstring ("return (function () " .. data .. " end)()", "stdin") end
-  if chunk then chunk = wrap(data, src, chunk) end
-  return chunk, err
+if loadstring then
+  function M.compile (data, src)
+    local chunk, err = loadstring ("return " .. data, "stdin")
+    if err then chunk, err = loadstring ("return (function () " .. data .. " end)()", "stdin") end
+    if chunk then setfenv(chunk, ns) chunk = wrap(data, src, chunk) end
+    return chunk, err
+  end
+else
+  function M.compile (data, src)
+    local chunk, err = load ("return " .. data, "stdin", "t", ns)
+    if err then chunk, err = load ("return (function () " .. data .. " end)()", "stdin", "t", ns) end
+    if chunk then chunk = wrap(data, src, chunk) end
+    return chunk, err
+  end
 end
 
 function M.execute (chunk, ...)

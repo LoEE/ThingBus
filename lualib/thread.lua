@@ -4,7 +4,12 @@ local socket = require'socket'
 local create = coroutine.create
 local yield = coroutine.yield
 local oldresume = coroutine.resume
-local oldcurrent = coroutine.running
+local function oldcurrent()
+  -- bring back Lua 5.1 functionality across versions
+  local thd, ismain = coroutine.running()
+  if ismain == true then return nil end
+  return thd
+end
 local oldyield = coroutine.yield
 
 -- Make sure we only return threads that we created (resumed).

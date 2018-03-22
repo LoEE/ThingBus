@@ -22,6 +22,12 @@
 #include "../common/str.h"
 #include "../common/LM.h"
 
+#if LUA_VERSION_NUM >= 502
+#define lua_setfenv lua_setuservalue
+#define lua_getfenv lua_getuservalue
+#endif
+
+
 // silence gcc warnings
 #define UNUSED __attribute__((__unused__))
 

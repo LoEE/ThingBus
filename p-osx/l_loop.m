@@ -15,6 +15,11 @@
 #include "../common/luaP.h"
 #include "../common/LM.h"
 
+#if LUA_VERSION_NUM >= 502
+#define lua_setfenv lua_setuservalue
+#define lua_getfenv lua_getuservalue
+#endif
+
 /// loop.file callback and context structure.
 char *loop_file_mt = "<loop.file>";
 static char *loop_file_proxy_table = "<loop.file.proxy_table>";

@@ -1,5 +1,14 @@
--- os
+if not newproxy then
+  function newproxy(mt)
+    if mt then
+      return setmetatable({}, {})
+    else
+      return {}
+    end
+  end
+end
 
+-- os
 function os.dirname(path)
   return string.match(path, "(.*)[\\/]") or '.'
 end

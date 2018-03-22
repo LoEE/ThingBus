@@ -62,8 +62,9 @@ void luaLM_register_metatable (lua_State *L, const char *name, const struct luaL
 /// Loads a C-based Lua library. 'fun' should be a pointer to a luaopen_* function.
 void luaLM_loadlib (lua_State *L, lua_CFunction fun)
 {
-  if (lua_cpcall (L, fun, NULL)) {
-    eprintf ("failed to load library: %s", lua_tostring (L, -1));
+  lua_pushcfunction(L, fun);
+  if (lua_pcall (L, 0, 0, 0)) {
+    eprintf ("failed to load library: %p: %s", fun, lua_tostring (L, -1));
     exit (1);
   }
 }
@@ -142,7 +143,11 @@ int luaLM_getfd (lua_State *L, int i)
 int luaLM_checkfd (lua_State *L, int i)
 {
   int fd = luaLM_getfd (L, i);
-  if (fd < 0) return luaL_typerror (L, i, "a file object or a file descriptor");
+  if (fd < 0) {
+    const char *msg = lua_pushfstring(L, "a file object or a file descriptor expected, got %s",
+                                      luaL_typename(L, i));
+    return luaL_argerror(L, i, msg);
+  }
   return fd;
 }
 
