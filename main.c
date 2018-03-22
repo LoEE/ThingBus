@@ -23,7 +23,7 @@ static const char *argv0 = NULL;
 static int traceback (lua_State *L)
 {
     if (!lua_isstring(L, 1)) return 1;
-    lua_getfield(L, LUA_GLOBALSINDEX, "debug");
+    lua_getglobal(L, "debug");
     if (!lua_istable(L, -1)) { lua_pop(L, 1); return 1; }
 
     lua_getfield(L, -1, "traceback");
@@ -99,7 +99,7 @@ int main (int argc, char **argv)
     lua_pushstring (L, argv[i]);
     lua_rawseti (L, -2, i);
   }
-  lua_setfield (L, LUA_GLOBALSINDEX, "arg");
+  lua_setglobal (L, "arg");
 
   int l_init(lua_State *L);
   lua_pushcfunction(L, traceback);
