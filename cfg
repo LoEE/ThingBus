@@ -1,3 +1,3 @@
 #!/bin/sh
 CFLAGS="-ggdb -Os --std=gnu99 -Wall -Wextra -Wno-missing-field-initializers -Wno-unused-parameter -DPLATFORM_STRING=\"${PLATFORM_STRING}\""
-LDFLAGS="-lluachecks -llua-zip -lzip -lz -llua-socket -llua-filesystem -llua-md5 -llua-yajl -llua-ev -lev -lyajl -lsha2 -lmodpbase64 -llua-lpeg -llua-cjson"
+LDFLAGS="-lluachecks -llua-socket -llua-filesystem -llua-md5 -llua-ev -lev -lsha2 -lmodpbase64 -llua-lpeg -llua-cjson -llua-tweetnacl"

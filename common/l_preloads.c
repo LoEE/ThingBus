@@ -19,9 +19,7 @@ int luaopen_bit32(lua_State *L);
 int luaopen_socket_core(lua_State *L);
 int luaopen_mime_core(lua_State *L);
 int luaopen_lfs(lua_State *L);
-int luaopen_yajl(lua_State *L);
 int luaopen_ev(lua_State *L);
-int luaopen_brimworks_zip(lua_State *L);
 int luaopen_lpeg(lua_State *L);
 int luaopen_cjson(lua_State *L);
 int luaopen_cjson_safe(lua_State *L);
@@ -37,9 +35,7 @@ const struct luaL_reg preloads[] = {
   { "buffer",         luaopen_buffer        },
   { "md5.core",       luaopen_md5_core      },
   { "sha",            luaopen_sha           },
-  { "yajl",           luaopen_yajl          },
   { "ev",             luaopen_ev            },
-  { "zip",            luaopen_brimworks_zip },
   { "miniz",          luaopen_miniz         },
   { "lpeg",           luaopen_lpeg          },
   { "cjson",          luaopen_cjson         },
