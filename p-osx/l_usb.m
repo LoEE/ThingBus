@@ -175,7 +175,7 @@ static void push_dev_location_str (lua_State *L, io_service_t service)
 {
   const NSNumber *location = IORegistryEntryCreateCFProperty (
       service, (CFStringRef)@kUSBDevicePropertyLocationID, kCFAllocatorDefault, kNilOptions);
-  NSString *loc_s = [[NSString alloc] initWithFormat:@"%08x", [location longValue]];
+  NSString *loc_s = [[NSString alloc] initWithFormat:@"%08lx", [location longValue]];
   lua_pushstring (L, [loc_s UTF8String]);
   [loc_s release]; [location release];
 }

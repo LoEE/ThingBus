@@ -104,7 +104,6 @@ static int cancel_writeable (lua_State *L)
 
 static int loop_run (lua_State *L)
 {
-  L=L;
   [[NSRunLoop currentRunLoop] run];
   return 0;
 }
@@ -286,7 +285,6 @@ static int _getfd (lua_State *L, int i)
 /// The file callback function passed to the NSRunLoop.
 static void file_obj_callback (CFSocketRef sock, CFSocketCallBackType type, CFDataRef addr, const void *data, void *info)
 {
-  sock = sock; addr = addr, data = data; // unused args
   struct file_obj *fo = info;
   lua_State *L = fo->L;
   STACK_CHECK;
@@ -372,7 +370,6 @@ static void file_obj_callback (CFSocketRef sock, CFSocketCallBackType type, CFDa
 - (void)fired:(NSTimer *)_t
 {
   STACK_CHECK;
-  _t = _t;
   
   if (!luaLM_push_strong_proxy(L, self)) {
     eprintf ("cannot retrieve the strong Lua proxy for a timer context: %p\n", self);
