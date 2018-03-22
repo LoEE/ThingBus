@@ -90,8 +90,8 @@ function Sepack:_parsechnname(str)
   return type, name
 end
 
-function Sepack:_addchn(id, name, forceinit)
-  local type, name = self:_parsechnname(name)
+function Sepack:_addchn(id, namedesc, forceinit)
+  local type, name = self:_parsechnname(namedesc)
   local chn = self.channels[id]
   if chn then
     if chn.name ~= name then
@@ -138,7 +138,12 @@ do
       while #p > 0 do
         local id, data, flags, final, rest = parse_packet(p)
         local channel = self.channels[id]
-        if self.verbose > 1 or not channel then self.log:green(string.format('<%s%s:%x', channel and channel.name or 'ch?', final and "" or "+", flags), D.hex(data)) end
+        if self.verbose > 1 or not channel then
+          self.log:green(string.format('<%s%s:%x', channel and channel.name or 'ch?',
+                                                   final and "" or "+",
+                                                   flags),
+                         D.hex(data))
+        end
         if channel then
           channel.bytes_received = (channel.bytes_received or 0) + #data
           channel:_handle_rx(data, flags, final)
@@ -178,7 +183,7 @@ end
 
 
 
-function add_threadsafety(channel)
+local function add_threadsafety(channel)
   function channel:_inbox_put(data)
     local chn = table.remove(self.reply_chns, 1)
     chn:put(data)
@@ -492,16 +497,16 @@ do
     local reply = self.gpio:xchg(self.cmds)
     local t = {}
     if #reply > 0 then
-      local i = 1
-      local o = 1
-      while i < #reply do
-        if reply:sub(i,i) == 'r' then
-          if not self.rets[o] then error('unexpected reply byte @ '..i) end
-          t[self.rets[o]] = reply:byte(i+1,i+1)
-          i = i + 2
-          o = o + 1
+      local iptr = 1
+      local optr = 1
+      while iptr < #reply do
+        if reply:sub(iptr,iptr) == 'r' then
+          if not self.rets[optr] then error('unexpected reply byte @ '..iptr) end
+          t[self.rets[optr]] = reply:byte(iptr+1,iptr+1)
+          iptr = iptr + 2
+          optr = optr + 1
         else
-          error('invalid reply byte @ '..i)
+          error('invalid reply byte @ '..iptr)
         end
       end
     end
@@ -538,14 +543,14 @@ function CT.gpio:init()
   local pins = self.sepack:setup(self)
   assert(#pins > 0)
   pins = pins:split(' ')
-  result = {}
+  local result = {}
   for i, pin in ipairs(pins) do
     local names, modes = pin:splitv(':')
     names = names:split('/')
     local name
     if not modes:find('p') then name = names[1] else name = names[2] end
     result[i-1] = { name = name, modes = modes, }
-    for _, name in ipairs(names) do result[name] = i-1 end
+    for _, alias in ipairs(names) do result[alias] = i-1 end
   end
   self.pins = result
   return result
@@ -581,9 +586,9 @@ CT.notify = O(CT._default)
 function CT.notify:init()
   self.pins = {}
   local pins = self.sepack:setup(self):split(' ')
-  result = {}
+  local result = {}
   for i, pin in ipairs(pins) do
-    local names, modes = pin:splitv(':')
+    local names, _ = pin:splitv(':')
     names = names:split('/')
     local name = names[1]
     result[i-1] = name
@@ -598,8 +603,8 @@ function CT.notify:_decode(data)
   if not self._pins then return {} end
   if data:startswith('n') or data:startswith('r') then
     local changes = {}
-    for i=2,#data,2 do
-      local i, v = string.byte(data, i, i+1)
+    for off=2,#data,2 do
+      local i, v = string.byte(data, off, off+1)
       local name = self._pins[i]
       v = v == 1
       changes[name] = v
