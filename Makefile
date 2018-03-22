@@ -49,7 +49,7 @@ $(LD): cfg
 
 all: $(EXE)-$P-stripped$(EXE_SUFFIX)
 
-install: all
+install: all .errno.$(P).lua
 	@echo »»» installing $P to $(INST)
 	rm -rf $(INST)
 	mkdir -p $(INST)/lualib
@@ -57,6 +57,7 @@ install: all
 	$(if $(INSTALLED_FILES),rsync -t $(INSTALLED_FILES) $(INST)/)
 	rsync -rt lualib/*.lua lualib/http $(INST)/lualib
 	rsync -rtL lualib/$(PLATFORM_STRING) $(INST)/lualib
+	rsync -rt .errno.$(P).lua $(INST)/lualib/$(PLATFORM_STRING)/errno.lua
 
 pkg: install
 	@echo »»» packing $P to $(PKG).tar.xz
@@ -66,6 +67,15 @@ pkg: install
 
 l_init.c: luatoc.lua
 	@./quiet "$@" lua $< l_init extensions.lua lualib-vendor/* +l_init.lua
+
+.errno.$(P).h: $(CC)
+	@$(CC) .errno.$(P).h -include "errno.h" -E -dM - < /dev/null
+
+.errno.$(P).lua: .errno.$(P).h
+	@./quiet "$@" lua extract_errno.lua "$@" < "$<"
+
+.errno.osx.lua .errno.osx64.lua:
+	@cat lualib/osx/errno.lua > "$@"
 
 $(EXE)-$P$(EXE_SUFFIX): $(OBJS) $(LD)
 	@$(LD) $@ $(OBJS)

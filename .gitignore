@@ -1,4 +1,6 @@
 /install/
 .*.d
 .*.o
+.errno.*.lua
+.errno.*.h
 /thb-*
