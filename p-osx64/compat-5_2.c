@@ -1,0 +1,1 @@
+../common/compat-5_2.c
