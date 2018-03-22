@@ -1,6 +1,1 @@
-#ifndef L_USB_H
-#define L_USB_H
-
-int luaopen_usb(lua_State *L);
-
-#endif
+../p-osx/l_usb.h
