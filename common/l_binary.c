@@ -283,7 +283,7 @@ static int lua_binary_b64_encode (lua_State *L)
   size_t ilen = 0;
   const char *is = luaL_checklstring (L, 1, &ilen);
   size_t olen = modp_b64_encode_len(ilen);
-  char os[olen];
+  char *os = lua_newuserdata(L, olen);
   olen = modp_b64_encode(os, is, ilen);
   lua_pushlstring(L, os, olen);
   return 1;
@@ -294,7 +294,7 @@ static int lua_binary_b64_decode (lua_State *L)
   size_t ilen = 0;
   const char *is = luaL_checklstring (L, 1, &ilen);
   size_t olen = modp_b64_decode_len(ilen);
-  char os[olen];
+  char *os = lua_newuserdata(L, olen);
   olen = modp_b64_decode(os, is, ilen);
   lua_pushlstring(L, os, olen);
   return 1;
