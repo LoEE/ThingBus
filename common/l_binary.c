@@ -296,6 +296,7 @@ static int lua_binary_b64_decode (lua_State *L)
   size_t olen = modp_b64_decode_len(ilen);
   char *os = lua_newuserdata(L, olen);
   olen = modp_b64_decode(os, is, ilen);
+  if (olen == (size_t)-1) return luaL_error(L, "invalid base64 string (maybe it contains whitespace?)");
   lua_pushlstring(L, os, olen);
   return 1;
 }
