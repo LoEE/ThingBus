@@ -65,6 +65,39 @@ char *get_executable_path (void);
 void init_platform(void);
 void lua_init_platform(lua_State *L);
 
+char *current_file;
+int current_ln = -1;
+
+#ifndef WIN32
+#include <fcntl.h>
+#include <errno.h>
+
+static void record_line (lua_State *L, lua_Debug *ar)
+{
+  lua_gc(L, LUA_GCCOLLECT, 0);
+  lua_getinfo(L, "S", ar);
+  if (!current_file || strcmp(current_file, ar->short_src)) {
+    if (current_ln != -1) free(current_file);
+    current_file = strdup(ar->short_src);
+  }
+  current_ln = ar->currentline;
+}
+
+static void *l_dbg_alloc (void *ud, void *ptr, size_t osize, size_t nsize)
+{
+  void *r;
+  if (nsize) {
+    r = realloc(ptr, nsize);
+  } else {
+    free(ptr);
+    r = NULL;
+  }
+
+  fprintf(ud, "%10p\t%zu\t->\t%10p\t%zu\t@\t%s\t%d\n", ptr, osize, r, nsize, current_file, current_ln);
+  return r;
+}
+#endif
+
 int main (int argc, char **argv)
 {
   init_platform();
@@ -72,8 +105,22 @@ int main (int argc, char **argv)
   argv0 = argv[0];
 
   lua_State *L;
+#ifndef WIN32
+  char *memdbg_fname = getenv("THB_MEMDBG_FILE");
+  if (memdbg_fname) {
+    FILE *memdbg = fopen(memdbg_fname, "w");
+    current_file = "newstate";
+    L = lua_newstate(l_dbg_alloc, memdbg);
+    current_file = "sethook";
+    lua_sethook(L, record_line, LUA_MASKLINE, 0);
+  } else {
+    L = luaL_newstate();
+  }
+#else
   L = luaL_newstate();
+#endif
 
+  current_file = "luaLM_create_proxy_table";
   luaLM_create_proxy_table (L);
 
   ev_async_init(&keyboard_interrupt_watcher, keyboard_interrupt_watcher_cb);
@@ -81,19 +128,26 @@ int main (int argc, char **argv)
   lua_sethook (L, lbreak, LUA_MASKCOUNT, 10000);
   enable_keyboard_interrupt_handler();
 
+  current_file = "openlibs";
   luaL_openlibs(L);
 
+  current_file = "preload";
   luaLM_preload (L, preloads);
   extern const struct luaL_reg platform_preloads[];
+  current_file = "platform preload";
   luaLM_preload (L, platform_preloads);
 
+  current_file = "additions";
   luaLM_loadlib (L, luaopen_additions);
 
+  current_file = "checks";
   extern int luaopen_checks(lua_State *L);
   luaLM_loadlib (L, luaopen_checks);
 
+  current_file = "init platform";
   lua_init_platform(L);
 
+  current_file = "args";
   lua_createtable (L, argc, 0);
   for (int i = 0; i < argc; i++) {
     lua_pushstring (L, argv[i]);
@@ -101,6 +155,7 @@ int main (int argc, char **argv)
   }
   lua_setglobal (L, "arg");
 
+  current_file = "setup init";
   int l_init(lua_State *L);
   lua_pushcfunction(L, traceback);
   lua_pushcfunction(L, l_init);
@@ -108,7 +163,9 @@ int main (int argc, char **argv)
   lua_pushstring(L, exedir);
   lua_pushliteral(L, PLATFORM_STRING);
   free(exedir);
+  current_file = "pcall init";
   if (lua_pcall (L, 2, 0, -4)) EXIT_ON_LUA_ERROR("initialization code");
 
+  current_ln = -1; current_file = "close";
   lua_close(L);
 }
