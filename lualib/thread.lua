@@ -2,7 +2,6 @@ local Object = require'oo'
 local socket = require'socket'
 
 local create = coroutine.create
-local yield = coroutine.yield
 local oldresume = coroutine.resume
 local oldcurrent = coroutine.running
 local oldyield = coroutine.yield
@@ -65,64 +64,61 @@ local callback_list = {}
 local nice_list = {}
 local Idle = { list = nice_list, call = function (f) assert(type(f) == 'function', 'function expected') nice_list[f] = true end }
 local handle_resume_result, resume
-function handle_resume_result (thd, tstart, ok, ...)
+function handle_resume_result (thd, tstart, resume_ok, ...)
   local tend = Thread.now()
   add_runtime (thd, tend - tstart)
-  if not ok then
+  if not resume_ok then
     local handler = thread_handlers[thd] or default_thread_handler
     local ok, err = Thread.spcall(handler, thd, ...)
     if not ok then
-      io.strerr:write(string.format("error in thread error handler for %s: %s\n",
+      io.stderr:write(string.format("error in thread error handler for %s: %s\n",
         Thread.getname (thd), err))
       os.exit(2)
     end
-  else
-    if select(1, ...) then
-      return resume(...) -- trampoline
-    else
-      local idle = false
-      while not idle do
-        idle = true
-        local thd = next(busy_list)
-        if thd then
-          busy_list[thd] = nil
-          return resume(thd)
+  elseif ... then
+    return resume(...) -- trampoline
+  end
+  local idle = false
+  while not idle do
+    idle = true
+    local busy_thd = next(busy_list)
+    if busy_thd then
+      busy_list[busy_thd] = nil
+      return resume(busy_thd)
+    end
+    if #callback_list > 0 then
+      idle = false
+      current_thread = 'thread:   callback'
+      local l = callback_list
+      callback_list = {}
+      for i=1,#l do
+        local ok, err = xpcall(l[i], debug.traceback)
+        if not ok then local here = #debug.traceback() - 16 + 27
+          -- FIXME: use default_thread_handler
+          print("error in queued callback: "..err:sub(1,#err - here))
+          os.exit(2)
         end
-        if #callback_list > 0 then
-          idle = false
-          current_thread = 'thread:   callback'
-          local l = callback_list
-          callback_list = {}
-          for i=1,#l do
-            local ok, err = xpcall(l[i], debug.traceback)
-            if not ok then local here = #debug.traceback() - 16 + 27
-              -- FIXME: use default_thread_handler
-              print("error in queued callback: "..err:sub(1,#err - here))
-              os.exit(2)
-            end
-          end
-        end
-        while true do
-          local v = next(nice_list)
-          if type(v) == 'thread' then
-            return resume (v, Idle)
-          elseif type(v) == 'function' then
-            idle = false
-            current_thread = 'thread:       nice'
-            nice_list[v] = nil
-            local ok, err = xpcall(v, debug.traceback)
-            if not ok then
-              -- FIXME: use default_thread_handler
-              print("error in idle callback: "..err)
-              os.exit(2)
-            end
-          else
-            break
-          end
-        end
-        current_thread = 'thread:       main'
       end
     end
+    while true do
+      local v = next(nice_list)
+      if type(v) == 'thread' then
+        return resume (v, Idle)
+      elseif type(v) == 'function' then
+        idle = false
+        current_thread = 'thread:       nice'
+        nice_list[v] = nil
+        local ok, err = xpcall(v, debug.traceback)
+        if not ok then
+          -- FIXME: use default_thread_handler
+          print("error in idle callback: "..err)
+          os.exit(2)
+        end
+      else
+        break
+      end
+    end
+    current_thread = 'thread:       main'
   end
 end
 local main_thread_resume_arguments
@@ -151,7 +147,7 @@ function resume (thd, ...)
     end
   end
 end
-function yield (...)
+local function yield (...)
   if not oldcurrent() then
     -- io.stderr:write('Thread.loop_run()\n')
     Thread.loop_run()
@@ -231,11 +227,11 @@ function Thread.recv (srcs, poll)
   if poll then return nil end
   local thd = current()
   if not thd then error ('you cannot use Thread.recv on the main thread', 2) end
-  for s,f in pairs(srcs) do
+  for s,_ in pairs(srcs) do
     s:register_thread (thd)
   end
   local function handle (src, ...)
-    for s,f in pairs(srcs) do
+    for s,_ in pairs(srcs) do
       s:unregister_thread (thd)
     end
     if src ~= false then
@@ -277,7 +273,7 @@ local ThreadMailbox = {}
 Thread.ThreadMailbox = ThreadMailbox
 ThreadMailbox.__type = "ThreadMailbox"
 
-function ThreadMailbox.poll (self)
+function ThreadMailbox.poll (_)
   local thd = current()
   local mbox = thread_mailboxes[thd]
   if mbox and #mbox > 0 then
@@ -286,11 +282,11 @@ function ThreadMailbox.poll (self)
   return false
 end
 
-function ThreadMailbox.register_thread (self, thd)
+function ThreadMailbox.register_thread (_, thd)
   get_mailbox(thd).waiting = true
 end
 
-function ThreadMailbox.unregister_thread (self, thd)
+function ThreadMailbox.unregister_thread (_, thd)
   get_mailbox(thd).waiting = false
 end
 
@@ -310,15 +306,15 @@ end
 
 Thread.Idle = Idle
 
-function Idle.poll (self)
+function Idle.poll (_)
   return nil
 end
 
-function Idle.register_thread (self, thd)
+function Idle.register_thread (_, thd)
   nice_list[thd] = true
 end
 
-function Idle.unregister_thread (self, thd)
+function Idle.unregister_thread (_, thd)
   nice_list[thd] = nil
 end
 
@@ -329,7 +325,7 @@ end
 local Source = Object:inherit()
 Thread.Source = Source
 
-function Source.poll (self)
+function Source.poll (_)
   return nil
 end
 
@@ -356,12 +352,12 @@ function Source.recv (self)
 end
 
 function Thread.install_loop (loop)
-  function Thread.sleep (seconds, id)
+  function Thread.sleep (seconds)
     local c = current()
     local cancel = loop.run_after (seconds, function ()
-      resume(c, true)
+      return resume(c, true)
     end)
-    local ok, err, arg = yield()
+    local ok = yield()
     if not ok then cancel() return yield() end
   end
 
@@ -387,7 +383,7 @@ function Thread.install_loop (loop)
   function Timeout:fire()
     self.timer = nil
     self.fired = true
-    for i, thd in ipairs(self) do
+    for _, thd in ipairs(self) do
       resume (thd, self)
     end
   end
@@ -473,13 +469,17 @@ function Thread.agent ()
   local agent = {
     [ThreadMailbox] = apply
   }
+  local mt = {
+    __type = "agent"
+  }
+  mt.__index = mt
   local thd = Thread.go (function ()
     while true do Thread.recv(agent) end
   end)
-  local function cast (self, thunk, ...)
+  function mt:__call (thunk, ...)
     return Thread.send(thd, nil, thunk, ...)
   end
-  local function pcall (self, thunk, ...)
+  function mt:pcall (thunk, ...)
     local mbox = Mailbox:new()
     Thread.send(thd, mbox, thunk, ...)
     return mbox:recv()
@@ -488,15 +488,13 @@ function Thread.agent ()
     assert(ok, ...)
     return ...
   end
-  local function call (self, thunk, ...)
+  function mt:call (thunk, ...)
     return handle_return(self:pcall(thunk, ...))
   end
-  local function handle (self, evsrc, func)
+  function mt:handle (evsrc, func)
     agent[evsrc] = func
     self(function () end)
   end
-  local mt = {__call = cast, pcall = pcall, call = call, handle = handle, __type = "agent" }
-  mt.__index = mt
   return setmetatable(agent, mt)
 end
 
