@@ -109,6 +109,7 @@ int main (int argc, char **argv)
   char *memdbg_fname = getenv("THB_MEMDBG_FILE");
   if (memdbg_fname) {
     FILE *memdbg = fopen(memdbg_fname, "w");
+    setlinebuf(memdbg);
     current_file = "newstate";
     L = lua_newstate(l_dbg_alloc, memdbg);
     current_file = "sethook";
