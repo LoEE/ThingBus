@@ -46,6 +46,7 @@ Sepack.new = O.constructor(function (self, ext, _log)
   self.channels = {}
 
   self.ext.status:watch(function (...) self:_ext_status(...) end)
+  self:_ext_status(self.ext.status())
   T.go(self._in_loop, self)
 end)
 
