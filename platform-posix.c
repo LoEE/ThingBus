@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <termios.h>
+#include <sys/ioctl.h>
 
 // Lua
 #include <lua.h>
@@ -184,6 +185,24 @@ int io_immediate_stdin (lua_State *L)
   return 0;
 }
 
+static int _ioctl(lua_State *L, int fd, int code, void *arg, const char *name)
+{
+  if(ioctl (fd, code, arg) < 0)
+    return luaLM_posix_error (L, name);
+  return 0;
+}
+
+int io_get_term_size (lua_State *L)
+{
+  struct winsize ws;
+  _ioctl(L, 1, TIOCGWINSZ, &ws, __FUNCTION__);
+
+  lua_pushnumber(L, ws.ws_row);
+  lua_pushnumber(L, ws.ws_col);
+
+  return 2;
+}
+
 
 int luaopen_posix_c(lua_State *L);
 int luaopen_socket_unix(lua_State *L);
@@ -210,6 +229,7 @@ void lua_init_platform_posix(lua_State *L)
     { "setinherit",      io_setinherit      },
     { "fsync",           io_fsync           },
     { "immediate_stdin", io_immediate_stdin },
+    { "get_term_size",   io_get_term_size   },
     { 0,                 0                  },
   };
   luaL_register (L, "io", io_additions);
