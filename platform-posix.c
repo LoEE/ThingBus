@@ -1,6 +1,8 @@
 #include <signal.h>
 #include <errno.h>
 #include <string.h>
+#include <stdlib.h>
+#include <termios.h>
 
 // Lua
 #include <lua.h>
@@ -151,6 +153,37 @@ static int io_fsync (lua_State *L)
   return 1;
 }
 
+/* Use this variable to remember original terminal attributes. */
+
+static struct termios saved_stdin_attributes;
+
+void reset_stdin (void)
+{
+  tcsetattr (0, TCSANOW, &saved_stdin_attributes);
+}
+
+int io_immediate_stdin (lua_State *L)
+{
+  int raw = lua_toboolean(L, 1);
+
+  if (!raw) {
+    reset_stdin();
+    return 0;
+  }
+
+  tcgetattr (0, &saved_stdin_attributes);
+  atexit (reset_stdin);
+
+  struct termios tattr;
+  tcgetattr (0, &tattr);
+  tattr.c_lflag &= ~(ICANON|ECHO);
+  tattr.c_cc[VMIN] = 1;
+  tattr.c_cc[VTIME] = 0;
+  tcsetattr (0, TCSAFLUSH, &tattr);
+
+  return 0;
+}
+
 
 int luaopen_posix_c(lua_State *L);
 int luaopen_socket_unix(lua_State *L);
@@ -171,12 +204,13 @@ void lua_init_platform_posix(lua_State *L)
   };
   luaL_register (L, "os", os_additions);
   const struct luaL_reg io_additions[] = {
-    { "raw_read",   io_raw_read   },
-    { "raw_write",  io_raw_write  },
-    { "raw_close",  io_raw_close  },
-    { "setinherit", io_setinherit },
-    { "fsync",      io_fsync      },
-    { 0,            0             },
+    { "raw_read",        io_raw_read        },
+    { "raw_write",       io_raw_write       },
+    { "raw_close",       io_raw_close       },
+    { "setinherit",      io_setinherit      },
+    { "fsync",           io_fsync           },
+    { "immediate_stdin", io_immediate_stdin },
+    { 0,                 0                  },
   };
   luaL_register (L, "io", io_additions);
 }
