@@ -292,14 +292,16 @@ end
 
 function ObservableDict:__newindex(k,v)
   assert(type(k) == 'string', 'ObservableDict keys have to be strings')
-  local new
-  if self.change then new = self:change(k, v) end
-  if new == nil then new = v end
-  if new ~= nil and self[_value][k] ~= nil then self:notify('del', k) end
-  self[_value][k] = new
-  local action
-  if v ~= nil then action = 'add' else action = 'del' end
-  self:notify(action, k)
+  local old = self[_value][k]
+  if v ~= nil and old ~= nil then
+    self:notify('del', k, old)
+  end
+  self[_value][k] = v
+  if v ~= nil then
+    self:notify('add', k)
+  else
+    self:notify('del', k, old)
+  end
 end
 
 function ObservableDict:__call(new)
@@ -317,17 +319,17 @@ ObservableDict.rawset = Observable.rawset
 ObservableDict.watch = Observable.watch
 ObservableDict.unwatch = Observable.unwatch
 
-function ObservableDict:notify(action, key)
+function ObservableDict:notify(action, key, old)
   local new = rawget(self, _value)
   rawset(self, _version, rawget(self, _version) + 1)
   for _,fun in ipairs(rawget(self, _observers)) do
-    T.queuecall(function () fun(action, key) end)
+    T.queuecall(function () fun(action, key, old) end)
   end
   local n = #self
   for i=n,1,-1 do
     local thd = self[i]
     rawget(self, _seen)[thd] = rawget(self, _version)
-    T.resume (thd, self, action, key)
+    T.resume (thd, self, action, key, old)
   end
 end
 
