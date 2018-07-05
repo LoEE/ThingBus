@@ -328,7 +328,8 @@ function ObservableDict:notify(action, key, old)
   local n = #self
   for i=n,1,-1 do
     local thd = self[i]
-    rawget(self, _seen)[thd] = rawget(self, _version)
+    local seen = rawget(self, _seen)
+    seen[thd] = rawget(self, _version)
     T.resume (thd, self, action, key, old)
   end
 end
