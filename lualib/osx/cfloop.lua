@@ -4,20 +4,20 @@ local T = require'thread'
 local loop = require'_loop'
 loop.type = 'CFRunLoop'
 
-function loop.read (file)
+function loop.read (file, len)
   local thd = T.current()
   local cancel
   local function handler ()
     local data, err
     if type(file) ~= 'number' and file.getsockname then
       local partial
-      data, err, partial = file:receive('*a')
+      data, err, partial = file:receive(len or '*a')
       if err == 'timeout' and partial then
         data = partial
         err = nil
       end
     else
-      data, err = io.raw_read(file)
+      data, err = io.raw_read(file, len)
     end
     if err ~= "timeout" then
       cancel()

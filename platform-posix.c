@@ -67,9 +67,10 @@ static int os_time_unix (lua_State *L)
 static int io_raw_read (lua_State *L)
 {
   int fd = luaLM_checkfd (L, 1);
+  int n = luaL_optint(L, 2, 100*1024);
 
-  char buffer[100*1024];
-  int ret = read (fd, buffer, sizeof(buffer));
+  char buffer[n];
+  int ret = read (fd, buffer, n);
   if (!ret) { // EOF
     lua_pushnil (L);
     lua_pushliteral (L, "eof");

@@ -51,7 +51,7 @@ function loop.run ()
   loop.default:loop()
 end
 
-function loop.read (file)
+function loop.read (file, len)
   local thd = T.current()
   local cancel
   local function handler ()
@@ -61,14 +61,14 @@ function loop.read (file)
       if file.receivefrom then
         data, err = file:receive()
       else
-        data, err, partial = file:receive('*a')
+        data, err, partial = file:receive(len or '*a')
       end
       if err == 'timeout' and partial then
         data = partial
         err = nil
       end
     else
-      data, err = io.raw_read(file)
+      data, err = io.raw_read(file, len)
     end
     if err == 'closed' then err = 'eof' end
     if err ~= "timeout" then
