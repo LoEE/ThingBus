@@ -24,6 +24,7 @@ int luaopen_lpeg(lua_State *L);
 int luaopen_cjson(lua_State *L);
 int luaopen_cjson_safe(lua_State *L);
 int luaopen_luatweetnacl(lua_State *L);
+int luaopen_unicode (lua_State *L);
 
 const struct luaL_reg preloads[] = {
   { "bit32",          luaopen_bit32         },
@@ -42,5 +43,6 @@ const struct luaL_reg preloads[] = {
   { "cjson",          luaopen_cjson         },
   { "cjson.safe",     luaopen_cjson_safe    },
   { "luatweetnacl",   luaopen_luatweetnacl  },
+  { "unicode",        luaopen_unicode       },
   { 0,                0                     },
 };
