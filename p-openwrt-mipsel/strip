@@ -1,0 +1,3 @@
+#!/bin/sh
+. ./p-openwrt-mipsel/env
+mipsel-openwrt-linux-strip -d "$@"
