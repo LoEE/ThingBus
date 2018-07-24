@@ -162,7 +162,16 @@ Thread.resume = resume
 
 function Thread.queuecall (fun)
   assert(type(fun) == 'function', 'function expected')
-  callback_list[#callback_list+1] = fun
+  if not oldcurrent() then
+    local ok, err = xpcall(fun, debug.traceback)
+    if not ok then local here = #debug.traceback() - 16 + 27
+      -- FIXME: use default_thread_handler
+      print("error in (non)queued callback: "..err:sub(1,#err - here))
+      os.exit(2)
+    end
+  else
+    callback_list[#callback_list+1] = fun
+  end
 end
 
 function Thread.kill (thd)
