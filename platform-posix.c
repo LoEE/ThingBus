@@ -64,6 +64,22 @@ static int os_time_unix (lua_State *L)
   return 1;
 }
 
+#if defined(__APPLE__)
+#include <util.h>
+#elif defined(__linux__)
+#include <pty.h>
+#endif
+
+static int os_forkpty (lua_State *L)
+{
+  int mpty;
+  int pid = forkpty(&mpty, NULL, NULL, NULL);
+  if (pid < 0) luaLM_posix_error (L, "forkpty");
+  lua_pushnumber(L, pid);
+  lua_pushnumber(L, mpty);
+  return 2;
+}
+
 static int io_raw_read (lua_State *L)
 {
   int fd = luaLM_checkfd (L, 1);
@@ -246,6 +262,7 @@ void lua_init_platform_posix(lua_State *L)
     { "pipe",      os_pipe      },
     { "getpid",    os_getpid    },
     { "time_unix", os_time_unix },
+    { "forkpty",   os_forkpty   },
     { 0,           0            },
   };
   luaL_register (L, "os", os_additions);
