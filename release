@@ -14,3 +14,7 @@ rsync -avP $DIR loee:srv/thb/dl/
 
 git tag -a "$DIR" -m "Release $DATE"
 git push --tags
+
+echo
+echo "http://thb.loee.pl/dl/$DIR"
+echo
