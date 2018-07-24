@@ -186,6 +186,32 @@ int io_immediate_stdin (lua_State *L)
   return 0;
 }
 
+int io_tty_noecho (lua_State *L)
+{
+  int fd = luaLM_getfd (L, 1);
+
+  static struct termios attrs;
+  tcgetattr (fd, &attrs);
+  lua_pushlstring(L, (void *)&attrs, sizeof(attrs));
+  attrs.c_lflag &= ~(ECHO);
+  attrs.c_oflag &= ~(ONLCR); // disables the lf->crlf conversion
+  tcsetattr (fd, TCSAFLUSH, &attrs);
+
+  return 1;
+}
+
+int io_tty_restore (lua_State *L)
+{
+  int fd = luaLM_getfd (L, 1);
+  size_t n = 0;
+  const void *attrs = luaL_checklstring(L, 2, &n);
+  if (n != sizeof(struct termios)) return luaL_error(L, "invalid attribute string length");
+
+  tcsetattr (fd, TCSAFLUSH, attrs);
+
+  return 0;
+}
+
 static int _ioctl(lua_State *L, int fd, int code, void *arg, const char *name)
 {
   if(ioctl (fd, code, arg) < 0)
@@ -231,6 +257,8 @@ void lua_init_platform_posix(lua_State *L)
     { "fsync",           io_fsync           },
     { "immediate_stdin", io_immediate_stdin },
     { "get_term_size",   io_get_term_size   },
+    { "tty_noecho",      io_tty_noecho      },
+    { "tty_restore",     io_tty_restore     },
     { 0,                 0                  },
   };
   luaL_register (L, "io", io_additions);
