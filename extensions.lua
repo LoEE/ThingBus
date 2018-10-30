@@ -18,7 +18,7 @@ if os.platform == 'win32' then
     p2 = assert(lsock:accept())
     local addr1, port1 = p1:getsockname()
     local paddr2, pport2 = p2:getpeername()
-    assert(addr1 == paddr2 and port1 == pport2)
+    assert(addr1 == paddr2 and tonumber(port1) == pport2, "address mismatch")
     lsock:close()
     p1:settimeout(0)
     p2:settimeout(0)
