@@ -1,2 +1,0 @@
-PLATFORM_STRING=linux
-INSTALLED_FILES=raw-usb.lua

@@ -1,3 +1,0 @@
-#!/bin/sh
-. ./p-openwrt-mips/env
-mips-openwrt-linux-strip -d "$@"

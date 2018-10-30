@@ -1,2 +1,0 @@
-#!/bin/sh
-/usr/local/i686-loee-linux-gnu-20150122.loee.pl/bin/i686-loee-linux-gnu-gcc -DPATH_MAX=4096 -m32 "$@"

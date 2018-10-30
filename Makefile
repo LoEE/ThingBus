@@ -1,67 +1,72 @@
-# Copyright (c) 2008-2012 Jakub Piotr Cłapa
+# Copyright (c) 2008-2018 Jakub Piotr Cłapa
 # This program is released under the new BSD license.
 #
 # Tool definitions
--include p-$P/Makefile
-export PLATFORM_STRING
 
-P      = none
-CC     = p-$P/cc
-LD     = p-$P/ld
-STRIP  = p-$P/strip
+ARCH   = none
+BASEARCH = $(subst -jit,,$(ARCH))
+ifeq ($(findstring -jit,$(ARCH)),)
+	LUA_LDFLAGS = -llua
+else
+	LUA_LDFLAGS = -lluajit-5.1
+endif
+export BASEARCH LUA_LDFLAGS
+STRIP  = toolchains/$(BASEARCH)/strip
 PAGER ?= less
 DATE  := $(shell date +%Y.%m.%d)
 
 # Source files
-CSRCS  = main.c l_init.c $(wildcard p-$P/*.c) $(wildcard p-$P/*.m)
-CSRCS += $(addprefix common/,LM.c luaP.c l_additions.c l_preloads.c)
+CSRCS  = main.c l_init.c $(wildcard toolchains/$(BASEARCH)/*.c) $(wildcard toolchains/$(BASEARCH)/*.m)
+CSRCS += $(addprefix common/,LM.c luaP.c l_additions.c l_preloads.c compat-5_2.c)
 CSRCS += $(addprefix common/,l_buffer.c buffer.c l_binary.c str.c byte.c l_crc.c l_xtea.c l_sha.c lbitlib.c l_miniz.c)
 CSRCS += $(addprefix common/,l_unicode.c)
+ifneq ($(ARCH),none)
+-include .Makefile.$(ARCH)
+endif
 
 INSTALLED_FILES += testy.lua
 
-OBJS   = $(join $(dir $(CSRCS)), $(addprefix .,$(addsuffix .$(P).o,$(notdir $(basename $(CSRCS))))))
+OBJS   = $(join $(dir $(CSRCS)), $(addprefix .,$(addsuffix .$(ARCH).o,$(notdir $(basename $(CSRCS))))))
 EXE    = thb
-INST   = install/$P
-PKG    = thb-$P-$(DATE)
+INST   = install/$(ARCH)
+PKG    = thb-$(ARCH)-$(DATE)
 
-PLATFORMS = $(subst p-,,$(wildcard p-*))
+PLATFORMS = $(subst toolchains/,,$(wildcard toolchains/*))
+PLATFORMS := $(PLATFORMS) $(addsuffix -jit,$(PLATFORMS))
 INSTALLS = $(addprefix install/,$(PLATFORMS))
 PKGS = $(addprefix pkg/,$(PLATFORMS))
 
 .PHONY: default all docs clean nuke $(PLATFORMS) install $(INSTALLS)
+.PRECIOUS: %-$(ARCH)$(EXE_SUFFIX)
 
 default:
 	@echo "Please choose a platform:"
 	@echo "   $(PLATFORMS)"
 
 $(PLATFORMS):
-	make P=$@ all
+	make ARCH=$@ all
 
 $(INSTALLS):
-	make P=$(subst install/,,$@) install
+	make ARCH=$(subst install/,,$@) install
 
 $(PKGS):
-	make P=$(subst pkg/,,$@) pkg
+	make ARCH=$(subst pkg/,,$@) pkg
 
 
-$(CC): cfg
-$(LD): cfg
+all: $(EXE)-$(ARCH)-stripped$(EXE_SUFFIX)
 
-all: $(EXE)-$P-stripped$(EXE_SUFFIX)
-
-install: all .errno.$(P).lua
-	@echo »»» installing $P to $(INST)
+install: all .errno.$(BASEARCH).lua
+	@echo »»» installing $(ARCH) to $(INST)
 	rm -rf $(INST)
 	mkdir -p $(INST)/lualib
-	rsync -t $(EXE)-$P-stripped$(EXE_SUFFIX) $(INST)/thb$(EXE_SUFFIX)
+	rsync -t $(EXE)-$(ARCH)-stripped$(EXE_SUFFIX) $(INST)/thb$(EXE_SUFFIX)
 	$(if $(INSTALLED_FILES),rsync -t $(INSTALLED_FILES) $(INST)/)
 	rsync -rt lualib/*.lua lualib/http $(INST)/lualib
 	rsync -rtL lualib/$(PLATFORM_STRING) $(INST)/lualib
-	rsync -rt .errno.$(P).lua $(INST)/lualib/$(PLATFORM_STRING)/errno.lua
+	rsync -rt .errno.$(BASEARCH).lua $(INST)/lualib/$(PLATFORM_STRING)/errno.lua
 
 pkg: install
-	@echo »»» packing $P to $(PKG).tar.xz
+	@echo »»» packing $(ARCH) to $(PKG).tar.xz
 	cp -r $(INST) install/$(PKG)
 	cd install && tar -c $(PKG)|xz > $(PKG).tar.xz
 	rm -rf install/$(PKG)
@@ -69,49 +74,55 @@ pkg: install
 l_init.c: luatoc.lua
 	@./quiet "$@" lua $< l_init extensions.lua lualib-vendor/* +l_init.lua
 
-.errno.$(P).h: $(CC)
-	@$(CC) .errno.$(P).h -include "errno.h" -E -dM - < /dev/null
+.Makefile.$(ARCH): generate-platform-Makefile
+	@./quiet "$@" ./generate-platform-Makefile "$@"
 
-.errno.$(P).lua: .errno.$(P).h
+ifneq ($(BASEARCH),osx)
+.errno.$(BASEARCH).h: ./compile-c
+	@./compile-c $@ -include "errno.h" -E -dM - < /dev/null
+
+.errno.$(BASEARCH).lua: .errno.$(BASEARCH).h
 	@./quiet "$@" lua extract_errno.lua "$@" < "$<"
+endif
 
 .errno.osx.lua .errno.osx64.lua:
 	@cat lualib/osx/errno.lua > "$@"
 
-$(EXE)-$P$(EXE_SUFFIX): $(OBJS) $(LD)
-	@$(LD) $@ $(OBJS)
+%-$(ARCH)$(EXE_SUFFIX): $(OBJS) ./link-%
+	@./link-$* $@ $(OBJS)
 
-$(EXE)-$P-stripped$(EXE_SUFFIX): $(EXE)-$P$(EXE_SUFFIX)
+%-$(ARCH)-stripped$(EXE_SUFFIX): %-$(ARCH)$(EXE_SUFFIX)
 	@$(STRIP) $< -o $@
 
-.%.$(P).o: %.c $(CC)
-	@rm -f .$*.$(P).d
-	@$(CC) $@ -MMD -MP -c $<
+.%.$(ARCH).o: %.c ./compile-c
+	@rm -f .$*.$(ARCH).d
+	@./compile-c $@ -MMD -MP -c $<
 
-.%.$(P).o: %.m $(CC)
-	@rm -f .$*.$(P).d
-	@$(CC) $@ -MMD -MP -c $<
+.%.$(ARCH).o: %.m ./compile-c
+	@rm -f .$*.$(ARCH).d
+	@./compile-c $@ -MMD -MP -c $<
 
 %.c.i: %.c
-	@$(CC) - -E $< | $(PAGER)
+	@./compile-c - -E $< | $(PAGER)
 
 %.c.s: %.c
-	@$(CC) - -S $< | $(PAGER)
+	@./compile-c - -S $< | $(PAGER)
 
 %.m.i: %.m
-	@$(CC) - -E $< | $(PAGER)
+	@./compile-c - -E $< | $(PAGER)
 
 %.m.s: %.m
-	@$(CC) - -S $< | $(PAGER)
+	@./compile-c - -S $< | $(PAGER)
 
 result_files = $(OBJS) $(OBJS:.o=.d)
 
 clean::
-	-rm -f quiet.log
-	-rm -f $(foreach P,$(PLATFORMS),$(result_files)) .l_init.d l_init.c
+	@rm -f quiet.log
+	@./quiet ".d .c" rm -f $(foreach ARCH,$(PLATFORMS),$(result_files))
+	@./quiet ".l_init.*" rm -f .l_init.d l_init.c
 
 nuke: clean
-	-rm -f $(EXE)-*
+	@./quiet "thb-*" rm -f $(addprefix thb-,$(PLATFORMS))*
 
 ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(MAKECMDGOALS),nuke)

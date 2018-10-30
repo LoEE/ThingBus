@@ -1,5 +1,0 @@
-#!/bin/sh
-. ./cfg
-TARGET="$1"
-shift
-./quiet "$TARGET" p-$P/gcc -o "$TARGET" $CFLAGS -Ip-$P -Ip-$P/lib "$@"

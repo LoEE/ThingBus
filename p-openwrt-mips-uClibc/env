@@ -1,3 +1,0 @@
-export BASE="/Volumes/OpenWRT/staging_dir"
-export STAGING_DIR="$BASE/target-mips_34kc_uClibc-0.9.33.2"
-export PATH="$BASE/toolchain-mips_34kc_gcc-4.8-linaro_uClibc-0.9.33.2/bin:$PATH"

@@ -1,0 +1,30 @@
+#!/bin/sh
+target=$1; shift
+
+common_static_libs="-lluachecks -llua-socket -llua-filesystem -llua-md5 -llua-ev -lev -lsha2 -lmodpbase64
+                    -llua-lpeg -llua-cjson -llua-tweetnacl -lcodepoint_width"
+
+case "$BASEARCH" in
+  openwrt*)
+    static_libs="-Wl,-E -Wl,-Bstatic $common_static_libs -llua-posix -llua-udev"
+    dynamic_libs="-Wl,-Bdynamic -ludev -ldl -lrt -lm -lutil $LUA_LDFLAGS"
+    ;;
+  linux*)
+    static_libs="-Wl,-E -Wl,-Bstatic $common_static_libs -llua-posix -llua-udev $LUA_LDFLAGS"
+    dynamic_libs="-Wl,-Bdynamic -ludev -ldl -lrt -lm -lutil"
+    ;;
+  osx)
+    static_libs="$common_static_libs -llua-posix $LUA_LDFLAGS"
+    dynamic_libs="-framework Foundation -framework IOKit -pagezero_size 10000 -image_base 100000000"
+    ;;
+  win*)
+    static_libs="$common_static_libs -llua-winapi $LUA_LDFLAGS"
+    dynamic_libs="-lpsapi -lMpr -lwsock32 -lWs2_32 -lshlwapi"
+    ;;
+esac
+
+./quiet "$target" "toolchains/$BASEARCH"/link -o "$target" \
+  -ggdb -Os --std=gnu99 \
+  -L"toolchains/$BASEARCH"/lib \
+  "$@" \
+  $static_libs $dynamic_libs

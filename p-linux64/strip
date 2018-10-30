@@ -1,2 +1,0 @@
-#!/bin/sh
-/usr/local/x86_64-loee-linux-gnu-20150122.loee.pl/bin/x86_64-loee-linux-gnu-strip -d "$@"

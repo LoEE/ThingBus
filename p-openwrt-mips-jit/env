@@ -1,3 +1,0 @@
-export BASE="/Volumes/OpenWRT/staging_dir"
-export STAGING_DIR="$BASE/target-mips_24kc_musl"
-export PATH="$BASE/toolchain-mips_24kc_gcc-7.3.0_musl/bin:$PATH"

@@ -1,2 +1,0 @@
-PLATFORM_STRING=osx
-INSTALLED_FILES=raw-usb.lua

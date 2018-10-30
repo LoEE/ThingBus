@@ -1,6 +1,7 @@
 /install/
 .*.d
 .*.o
+.Makefile.*
 .errno.*.lua
 .errno.*.h
 /thb-*

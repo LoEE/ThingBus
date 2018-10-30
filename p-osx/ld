@@ -1,5 +1,0 @@
-#!/bin/sh
-. ./cfg
-TARGET="$1"
-shift
-./quiet "$TARGET" p-$P/gcc -Lp-$P/lib -framework Foundation -framework IOKit $LDFLAGS -llua -llua-posix -o "$TARGET" "$@"

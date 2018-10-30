@@ -1,3 +1,0 @@
-#!/bin/sh
-. ./p-openwrt-mips-jit/env
-mips-openwrt-linux-gcc "$@"

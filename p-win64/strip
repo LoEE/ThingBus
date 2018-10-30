@@ -1,2 +1,0 @@
-#!/bin/sh
-exec /usr/local/x86_64-w64-mingw32-20150524.loee.pl/bin/x86_64-w64-mingw32-strip -d "$@"

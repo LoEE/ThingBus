@@ -10,7 +10,7 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#include <../common/LM.h>
+#include "common/LM.h"
 
 void keyboard_interrupt(void);
 static void sigint (int i)

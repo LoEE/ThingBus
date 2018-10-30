@@ -1,0 +1,26 @@
+#!/bin/sh
+
+output=$1
+
+. "toolchains/$BASEARCH/platform"
+
+tmpfile=$(mktemp "$output.XXXXXXX")
+
+{
+case "$PLATFORM_STRING" in
+  linux*)
+    echo "CSRCS+=platform-posix.c"
+    echo "INSTALLED_FILES=raw-usb.lua"
+    ;;
+  osx*)
+    echo "CSRCS+=platform-posix.c"
+    ;;
+  win*)
+    echo "EXE_SUFFIX=.exe"
+    ;;
+esac
+
+echo "CSRCS+=\$(wildcard platform-$PLATFORM_STRING/*.c)"
+echo "CSRCS+=\$(wildcard platform-$PLATFORM_STRING/*.m)"
+} > "$tmpfile"
+mv "$tmpfile" "$output"

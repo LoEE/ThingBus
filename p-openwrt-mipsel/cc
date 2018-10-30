@@ -1,5 +1,0 @@
-#!/bin/sh
-. ./cfg
-TARGET="$1"
-shift
-./quiet "$TARGET" p-$P/gcc -o "$TARGET" $CFLAGS -D__Linux26__ -mips32r2 -mtune=24kc -fno-caller-saves -fno-plt -fhonour-copts -msoft-float -mips16 -minterlink-mips16 -Ip-$P -Ip-$P/lib "$@"
