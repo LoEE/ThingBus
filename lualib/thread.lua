@@ -151,7 +151,13 @@ local function yield (...)
   if not oldcurrent() then
     -- io.stderr:write('Thread.loop_run()\n')
     Thread.loop_run()
-    return unpack(main_thread_resume_arguments)
+    local resume_args = main_thread_resume_arguments
+    if not resume_args then
+      -- Ctrl-C ??
+      error("Keyboard interrupt", 0)
+    end
+    main_thread_resume_arguments = nil
+    return unpack(resume_args)
   else
     return oldyield(...)
   end
