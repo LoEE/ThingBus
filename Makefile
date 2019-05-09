@@ -17,7 +17,10 @@ DATE  := $(shell date +%Y.%m.%d)
 
 # Source files
 CSRCS  = main.c l_init.c $(wildcard toolchains/$(BASEARCH)/*.c) $(wildcard toolchains/$(BASEARCH)/*.m)
-CSRCS += $(addprefix common/,LM.c luaP.c l_additions.c l_preloads.c compat-5_2.c)
+CSRCS += $(addprefix common/,LM.c luaP.c l_additions.c l_preloads.c)
+ifeq ($(findstring -jit,$(ARCH)),)
+	CSRCS += common/compat-5_2.c
+endif
 CSRCS += $(addprefix common/,l_buffer.c buffer.c l_binary.c str.c byte.c l_crc.c l_xtea.c l_sha.c lbitlib.c l_miniz.c)
 CSRCS += $(addprefix common/,l_unicode.c)
 ifneq ($(ARCH),none)
