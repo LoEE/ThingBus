@@ -376,8 +376,9 @@ function Thread.install_loop (loop)
     if not ok then cancel() return yield() end
   end
 
+  local ev = require'ev'
   Thread.loop_run = loop.run
-  Thread.loop_stop = function () loop.default:unloop() end
+  Thread.loop_stop = function () loop.default:unloop(ev.UNLOOP_ONE) end
 
   local Timeout = Source:inherit()
   Timeout.__type = 'Timeout'
