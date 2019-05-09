@@ -15,6 +15,7 @@
 #include "l_buffer.h"
 #include "l_sha.h"
 #include "l_miniz.h"
+#include "l_stb_image.h"
 int luaopen_bit32(lua_State *L);
 int luaopen_socket_core(lua_State *L);
 int luaopen_mime_core(lua_State *L);
@@ -44,5 +45,6 @@ const struct luaL_reg preloads[] = {
   { "cjson.safe",     luaopen_cjson_safe    },
   { "luatweetnacl",   luaopen_luatweetnacl  },
   { "unicode",        luaopen_unicode       },
+  { "stb_image",      luaopen_stb_image     },
   { 0,                0                     },
 };
