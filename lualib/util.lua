@@ -191,10 +191,18 @@ end
 M.prepend_timestamps = true
 M.prepend_thread_names = true
 
+local getpid
+if os.platform == 'windows' then
+  local winapi = require'winapi'
+  getpid = winapi.get_current_pid
+else
+  local posix = require'posix'
+  getpid = posix.getpid
+end
 local function D(c)
   return function (msg)
     return function (...)
-      local name = M.prepend_thread_names and T.getname()
+      local name = M.prepend_thread_names and (getpid('pid') .. T.getname())
       logger:_put(name, c, msg, ...)
       return ...
     end
