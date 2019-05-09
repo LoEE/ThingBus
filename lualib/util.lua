@@ -51,7 +51,7 @@ function M.abort(code, message)
 end
 
 local color
-if os.platform == 'win32' then
+if os.platform == 'windows' then
   function color(c)
     return ''
   end

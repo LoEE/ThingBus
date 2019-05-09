@@ -14,7 +14,7 @@ end
 
 local D = require'util'
 local convert_file
-if os.platform == 'win32' then
+if os.platform == 'windows' then
   local cache = setmetatable({}, { __mode = 'k' })
   function convert_file(file)
     if not cache[file] then
