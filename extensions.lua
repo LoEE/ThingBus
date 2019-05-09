@@ -8,7 +8,7 @@ function os.basename(path)
   return string.match(path, "([^\\/]*)$") or ''
 end
 
-if os.platform == 'win32' then
+if os.platform == 'windows' then
   local socket = require'socket'
   function os.pipe()
     local p1, p2, lsock

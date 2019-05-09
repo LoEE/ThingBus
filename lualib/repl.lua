@@ -77,7 +77,7 @@ end
 M.repls = {}
 
 function M.start (file, err_handler)
-  if file == 0 and os.platform == "win32" then
+  if file == 0 and os.platform == "windows" then
     file = console_in()
   end
   err_handler = err_handler or M.default_err_handler

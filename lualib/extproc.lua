@@ -14,7 +14,7 @@ local ExtProc = Object:inherit{
 
 if os.platform == 'linux' or os.platform == 'osx' then
   ExtProc.usb_exe = os.executable_path..' :raw-usb'
-elseif os.platform == 'win32' then
+elseif os.platform == 'windows' then
   ExtProc.usb_exe = os.executable_dir..'/sepack-hid-win32.exe'
 end
 
