@@ -8,7 +8,7 @@
 - (void) addReadCallback:(CFSocketCallBack)callback 
              withContext:(void *)ctx 
        forFileDescriptor:(int)fd
-                 andMode:(NSString *)mode;
+                 andMode:(NSString *)mode
 {
   CFSocketContext sock_ctx = { 0, ctx, 0, 0, 0 };
   CFSocketRef sock = CFSocketCreateWithNative(NULL, fd, kCFSocketReadCallBack, callback, &sock_ctx);
