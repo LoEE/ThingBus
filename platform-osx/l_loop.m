@@ -303,18 +303,22 @@ static void file_obj_callback (CFSocketRef sock, CFSocketCallBackType type, CFDa
     case kCFSocketWriteCallBack:
       cbfield = "write";
       break;
-    // FIXME: kCFSocketConnectCallBack
-    // kCFSocketAcceptCallBack, kCFSocketDataCallBack -- these fetch data themselves which makes them 
-    // incompatible with LuaSocket
-  }
-
-  if (!cbfield) {
-    int t = type;
-    _D("invalid CFSocket callback type: %d, for socket: %p (fd: %d)",
-        t, lua_touserdata (L, -2), fo->fd);
-    lua_pop (L, 2); // userdata, file object
-    STACK_CHECK_END;
-    return;
+    // these fetch data themselves which makes them 
+    // incompatible with LuaSocket:
+    case kCFSocketAcceptCallBack:
+    case kCFSocketDataCallBack:
+    // FIXME: ??
+    case kCFSocketConnectCallBack:
+    default:
+    {
+      // kCFSocketAcceptCallBack, kCFSocketDataCallBack -- 
+      int t = type;
+      _D("invalid CFSocket callback type: %d, for socket: %p (fd: %d)",
+          t, lua_touserdata (L, -2), fo->fd);
+      lua_pop (L, 2); // userdata, file object
+      STACK_CHECK_END;
+      return;
+    }
   }
 
   lua_pushcfunction(L, traceback);
