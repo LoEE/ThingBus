@@ -792,8 +792,9 @@ CT.pwm = O(CT._default)
 
 CT.pwm.VALID_IDS = { [1] = true, [2] = true, [3] = true }
 
-function CT.pwm:setup(channels)
-  checks('table', 'string')
+function CT.pwm:setup(channels, frequency)
+  checks('table', 'string', '?number')
+  frequency = frequency or 15000
   local chnmask = 0
   for i=1,#channels do
     local id = tonumber(string.sub(channels, i, i))
@@ -801,7 +802,11 @@ function CT.pwm:setup(channels)
     chnmask = chnmask + 2^(id-1)
   end
   self.channels = channels
-  return checkerr(self.sepack:setup(self, chnmask))
+  local freq_mHz = math.floor(frequency * 1000 + .5)
+  local reply = checkerr(self.sepack:setup(self, chnmask..B.enc32BE(freq_mHz)))
+  local actual_freq = B.dec32BE(reply) / 1000
+  local resolution = 1/B.dec16BE(reply, 5)
+  return actual_freq, resolution
 end
 
 function CT.pwm:on_connect()
