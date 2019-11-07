@@ -22,7 +22,7 @@ ifeq ($(findstring -jit,$(ARCH)),)
 	CSRCS += common/compat-5_2.c
 endif
 CSRCS += $(addprefix common/,l_buffer.c buffer.c l_binary.c str.c byte.c l_crc.c l_xtea.c l_sha.c lbitlib.c l_miniz.c)
-CSRCS += $(addprefix common/,l_unicode.c l_stb_image.c)
+CSRCS += $(addprefix common/,l_unicode.c)
 ifneq ($(ARCH),none)
 -include .Makefile.$(ARCH)
 endif
