@@ -752,6 +752,31 @@ CT.spi.__tostring = CT._default.__tostring
 
 CT.watchdog = O(CT._default)
 
+function CT.watchdog:on_connect()
+  if not self.status then self.status = o(false) end
+  CT._default.on_connect(self)
+  local ok, err = T.pcall(function ()
+    local uptime = self:getuptime()
+    local reset = self:reset_status()
+    if not next(reset) then reset = nil end
+    self.status({ uptime = uptime, reset = reset })
+  end)
+  if not ok then
+    self.status({ error = err })
+  end
+end
+
+function CT.watchdog:auto()
+  self.watcher = self.status:watch(function () self.sepack.log:struct('connect', self.status()) end)
+  self.sepack.log:struct('connect', self.status())
+  self.feeder_thd = T.go(function()
+    while true do
+      self:write('-')
+      T.sleep(5)
+    end
+  end)
+end
+
 function CT.watchdog:query()
   local reply = self:setup('?')
   if not reply then return nil, "timeout" end
@@ -773,6 +798,12 @@ function CT.watchdog:reset_status()
   local b = B.unpackbits(status, 'soft bod wdt ext por')
   for k,v in pairs(b) do if not v then b[k] = nil end end
   return b
+end
+
+function CT.watchdog:getuptime()
+  local reply = self:setup('B')
+  if not reply then return nil, "timeout" end
+  return B.dec32BE(reply)
 end
 
 function CT.watchdog:settimer(val)
