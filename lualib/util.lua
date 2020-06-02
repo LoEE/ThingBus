@@ -219,6 +219,46 @@ function Logger:struct(id, object)
   struct_sink(self.enabled, self.name, id, object, ctx)
 end
 
+function Logger.format_traceback_struct(err, thd)
+  local loc, file, msg, traceback = string.match(err, "^(([^:]+):[0-9]+): *([^\n]*)\n?(.*)$")
+  local name
+  if type(thd) == 'thread' then
+    name = T.getname(thd)
+  end
+  return {
+    name = name,
+    error = msg or err,
+    location = loc,
+    file = file,
+    traceback = string.gsub(thd and debug.traceback(thd) or traceback, "^stack traceback:\n\t", ""),
+  }
+end
+
+local function test_format_traceback_struct()
+  local p1 = log.format_traceback_struct([[test_exception_logging.lua:10: qwe
+stack traceback:
+  [C]: in function 'error'
+  test_exception_logging.lua:10: in function <test_exception_logging.lua:9>
+  [C]: in function 'xpcall'
+  /Users/jpc/Projects/vending-app/stm.lua:32: in function </Users/jpc/Projects/vending-app/stm.lua:24>]])
+  assert(p1.error == "qwe")
+  assert(p1.location == "test_exception_logging.lua:10")
+  assert(p1.file == "test_exception_logging.lua")
+  assert(p1.traceback == [[[C]: in function 'error'
+  test_exception_logging.lua:10: in function <test_exception_logging.lua:9>
+  [C]: in function 'xpcall'
+  /Users/jpc/Projects/vending-app/stm.lua:32: in function </Users/jpc/Projects/vending-app/stm.lua:24>]])
+  local c = coroutine.create(function () error("asd") end)
+  local ok, err = coroutine.resume(c)
+  assert(not ok)
+  local p2 = log.format_traceback_struct(err, c)
+  assert(p2.error == "asd")
+  assert(p2.file == "logger-patch.lua")
+  assert(string.match(p2.location, "logger%-patch.lua:[0-9]+"))
+  assert(string.match(p2.traceback,
+      "%[C%]: in function 'error'\n\009logger%-patch.lua:[0-9]+: in function <logger%-patch.lua:[0-9]+>"))
+end
+
 local Logger_mt = {}
 setmetatable(Logger, Logger_mt)
 
@@ -230,6 +270,17 @@ function Logger_mt.__index(self, name)
     return self[name]
   end
 end
+
+
+
+-- log tracebacks
+local thread_error_log = log:sub('thread')
+local old_thread_error_handler
+old_thread_error_handler = T.sethandler('default', function (thd, err)
+  thread_error_log:struct('error', thread_error_log.format_traceback_struct(err, thd))
+  if io.isatty(2) then old_thread_error_handler(thd, err) end
+  os.exit(2)
+end)
 
 
 

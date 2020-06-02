@@ -264,6 +264,7 @@ end
 
 function Thread.sethandler (thd, fun)
   checks('thread|string', 'function')
+  local old_handler = default_thread_handler
   if type(thd) == 'thread' then
     thread_handlers[thd] = fun
   elseif thd == 'default' then
@@ -271,6 +272,7 @@ function Thread.sethandler (thd, fun)
   else
     error("sethandler: invalid argument #1 expected thread or 'default' got: "..tostring(thd))
   end
+  return old_handler
 end
 
 function Thread.recv (srcs, poll)
