@@ -249,9 +249,11 @@ int io_get_term_size (lua_State *L)
 
 int luaopen_posix_c(lua_State *L);
 int luaopen_socket_unix(lua_State *L);
+int luaopen_serial(lua_State *L);
 const struct luaL_reg platform_posix_preloads[] = {
   { "posix",          luaopen_posix_c     },
   { "socket.unix",    luaopen_socket_unix },
+  { "serial",         luaopen_serial      },
   { 0,                0                   },
 };
 
