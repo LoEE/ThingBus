@@ -66,7 +66,7 @@ Thread.getname = getname
 
 local total_runtime = 0
 local function add_runtime (thd, time)
-  thd = getname(thd)
+  thd = thread_names[thd]
   if time > (thread_latencies[thd] or 0) then thread_latencies[thd] = time end
   thread_runtimes[thd] = (thread_runtimes[thd] or 0) + time
   total_runtime = total_runtime + time
@@ -393,19 +393,13 @@ end
 function Source.register_thread (self, thd)
   local i = #self + 1
   self[i] = thd
-end
-
-local function find(t, v)
-  for i,c in ipairs(t) do
-    if c == v then
-      return i
-    end
-  end
+  self[thd] = i
 end
 
 function Source.unregister_thread (self, thd)
-  local i = find(self, thd)
+  local i = self[thd]
   table.remove (self, i)
+  self[thd] = nil
 end
 
 function Source.recv (self)
