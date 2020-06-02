@@ -436,14 +436,17 @@ function Thread.install_loop (loop)
     if seconds <= 0 then
       self:fire()
     else
-      self.timer = loop.run_after (seconds, function ()
-        self:fire()
-      end)
+      if self.timer then
+        self.timer(seconds)
+      else
+        self.timer = loop.run_after (seconds, function ()
+          self:fire()
+        end)
+      end
     end
   end
 
   function Timeout:fire()
-    self.timer = nil
     self.fired = true
     for _, thd in ipairs(self) do
       resume (thd, self)
@@ -456,9 +459,7 @@ function Thread.install_loop (loop)
 
   function Timeout:cancel()
     self.fired = nil
-    if not self.timer then return end
     self.timer()
-    self.timer = nil
   end
 
   function Timeout:restart(time)

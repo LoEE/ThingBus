@@ -30,7 +30,13 @@ function loop.on_readable (file, handler, rearm)
   if not rearm then handler = oneshot (handler) end
   local watcher = ev.IO.new(handler, convert_file(file), ev.READ)
   watcher:start (loop.default)
-  return function () watcher:stop(loop.default) end
+  return function (restart)
+    if restart then
+      watcher:start(loop.default)
+    else
+      watcher:stop(loop.default)
+    end
+  end
 end
 loop.on_acceptable = loop.on_readable
 
@@ -44,7 +50,13 @@ end
 function loop.run_after (seconds, handler)
   local timer = ev.Timer.new (handler, seconds)
   timer:start (loop.default)
-  return function () timer:stop (loop.default) end
+  return function (newseconds)
+    if newseconds then
+      return timer:again(loop.default, newseconds)
+    else
+      timer:stop(loop.default)
+    end
+  end
 end
 
 function loop.run ()
