@@ -218,6 +218,7 @@ end
 local function add_threadsafety(channel)
   function channel:_inbox_put(data)
     local chn = table.remove(self.reply_chns, 1)
+    if not chn then error('spurious reply received: '..data) end
     chn:put(data)
   end
 
