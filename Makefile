@@ -27,7 +27,7 @@ ifneq ($(ARCH),none)
 -include .Makefile.$(ARCH)
 endif
 
-INSTALLED_FILES += testy.lua
+INSTALLED_FILES += testy.lua lotest.lua
 ifneq ($(ARCH),win32)
 INSTALLED_FILES += raw-usb.lua
 endif
