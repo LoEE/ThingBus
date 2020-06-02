@@ -3,8 +3,8 @@ local O = require'o'
 local T = require'thread'
 local B = require'binary'
 local o = require'kvo'
-local bit = require'bit32'
-
+local bit_ok, bit = T.spcall(require, 'bit') if not bit_ok then bit = nil end
+local bit32_ok, bit32 = T.spcall(require, 'bit32') if not bit32_ok then bit32 = nil end
 
 -- all flags are >> 1 compared to sepack-lpc1342 C code
 local NO_REPLY_FLAG = 0x01
@@ -122,22 +122,39 @@ function Sepack:chn(name)
 end
 
 do
-  local function parse_packet(p)
-    local head = p:byte(1)
-    local id = bit.extract (head, 0, 4)
-    local final = bit.extract (head, 4) == 0
-    local flags = bit.extract (head, 5, 3)
-    local len = p:byte(2)
-    local data = p:sub(3, 3+len-1)
-    return id, data, flags, final, p:sub(3+len)
+  local function parse_packet(p, i, implicit_length)
+    local head = p:byte(i)
+    local id, final, flags
+    if bit ~= nil then
+      id = bit.band(head, 0xf)
+      final = bit.band(head, 0x10) == 0
+      flags = bit.rshift(bit.band(head, 0xe0), 5)
+    else
+      id = bit32.extract (head, 0, 4)
+      final = bit32.extract (head, 4) == 0
+      flags = bit32.extract (head, 5, 3)
+    end
+    local len, data
+    if implicit_length then
+      len = #p - 1
+      data = p:sub(i+1)
+      i = i+1+len
+    else
+      len = p:byte(i+1)
+      data = p:sub(i+2, i+2+len-1)
+      i = i+2+len
+    end
+    return id, data, flags, final, i
   end
 
   function Sepack:_in_loop ()
     while true do
       local p = self.ext.inbox:recv()
       if self.verbose > 2 then self.log:cyan(string.format('<<[%d]', #p), hex_trunc(p, 20)) end
-      while #p > 0 do
-        local id, data, flags, final, rest = parse_packet(p)
+      local i = 1
+      local id, data, flags, final
+      while i <= #p do
+        id, data, flags, final, i = parse_packet(p, i, self.ext.implicit_length)
         local channel = self.channels[id]
         if self.verbose > 1 or not channel then
           self.log:green(string.format('<%s%s:%x', channel and channel.name or 'ch?',
@@ -146,34 +163,44 @@ do
                          D.hex(data))
         end
         if channel then
-          channel.bytes_received = (channel.bytes_received or 0) + #data
+          -- channel.bytes_received = (channel.bytes_received or 0) + #data
           channel:_handle_rx(data, flags, final)
         end
-        p = rest
       end
     end
   end
 end
 
 do
-  local function format_packet(id, data, flags, final)
+  local function format_packet(id, data, flags, final, implicit_length)
     flags = (flags or 0) * 2
     if not final then flags = flags + 1 end
-    return string.char(id + (flags * 16), #data)..data
+    if implicit_length then
+      return string.char(id + (flags * 16))..data
+    else
+      return string.char(id + (flags * 16), #data)..data
+    end
   end
 
   function Sepack:write (channel, data, flags)
     if self.verbose > 1 then self.log:green(string.format ("%s:%x>", channel.name, flags or 0), D.hex(data)) end
     local pkgs = {}
-    while #data > 0 do
+    repeat
       local final = #data <= 62
-      local p = format_packet(channel.id, data:sub(1,62), flags, final)
+      local p = format_packet(channel.id, data:sub(1,62), flags, final, self.ext.implicit_length)
       pkgs[#pkgs+1] = p
       data = data:sub(63)
+    until #data == 0
+    if self.ext.implicit_length then
+      if self.verbose > 2 then
+        for _,out in ipairs(pkgs) do self.log:cyan(string.format('>>[%d]', #out), hex_trunc(out, 20)) end
+      end
+      self.ext.outbox:put(pkgs)
+    else
+      local out = table.concat(pkgs)
+      if self.verbose > 2 then self.log:cyan(string.format('>>[%d]', #out), hex_trunc(out, 20)) end
+      self.ext.outbox:put(out)
     end
-    local out = table.concat(pkgs)
-    if self.verbose > 2 then self.log:cyan(string.format('>>[%d]', #out), hex_trunc(out, 20)) end
-    self.ext.outbox:put(out)
   end
 end
 
@@ -247,8 +274,7 @@ function CT._default:_handle_rx(data, flags, final)
   if b == false then
     r = data
   else
-    if b == nil then b = {} self.buffer = b end
-    table.insert(b, data)
+    b[#b+1] = data
     if final then
       data = table.concat(b)
       for i=1,#b do b[i] = nil end
@@ -263,7 +289,6 @@ end
 
 function CT._default:write(data, flags)
   flags = flags or NO_REPLY_FLAG
-  if type(data) == 'table' then data = B.flat(data) end
   self.sepack:write(self, data, flags)
 end
 
@@ -495,7 +520,7 @@ do
   end
 
   function chainer:run()
-    local reply = self.gpio:xchg(self.cmds)
+    local reply = self.gpio:xchg(table.concat(self.cmds))
     local t = {}
     if #reply > 0 then
       local iptr = 1
