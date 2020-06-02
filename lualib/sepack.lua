@@ -35,6 +35,7 @@ Sepack.new = O.constructor(function (self, ext, _log)
   self.verbose = 2
   self.log = _log or log.null
   self.ext = ext
+  self._coldplug_wait = true
   self.connected = o()
   self.serial = ext.serial
   self.serial_number = o.computed(function ()
@@ -58,11 +59,14 @@ end
 
 function Sepack:_ext_status(status)
   if status == 'connect' then
+    self._coldplug_wait = nil
     T.go(self._enumerate, self)
   elseif status == true then
   elseif status == 'coldplug end' then
+    self._coldplug_wait = nil
     self.connected(false)
   else
+    if self._coldplug_wait then return end
     if self.verbose > 2 then self.log:green('÷ status:', status, self.connected()) end
     if status == false and self.connected() then self:on_disconnect() end
     self.connected(false)
