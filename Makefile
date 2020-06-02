@@ -7,8 +7,10 @@ ARCH   = none
 BASEARCH = $(subst -jit,,$(ARCH))
 ifeq ($(findstring -jit,$(ARCH)),)
 	LUA_LDFLAGS = -llua
+	PUC_LUA=1
 else
 	LUA_LDFLAGS = -lluajit-5.1
+	LUAJIT=1
 endif
 export BASEARCH LUA_LDFLAGS
 STRIP  = toolchains/$(BASEARCH)/strip
@@ -69,6 +71,7 @@ install: all .errno.$(BASEARCH).lua
 	$(if $(INSTALLED_FILES),rsync -t $(INSTALLED_FILES) $(INST)/)
 	rsync -rt lualib/*.lua lualib/http $(INST)/lualib
 	rsync -rtL lualib/$(PLATFORM_STRING) $(INST)/lualib
+	$(if $(LUAJIT),rsync -rt toolchains/$(BASEARCH)/lib/lualib-luajit/ $(INST)/lualib/jit/)
 	rsync -rt .errno.$(BASEARCH).lua $(INST)/lualib/$(PLATFORM_STRING)/errno.lua
 
 pkg: install
