@@ -2,6 +2,8 @@ local Pretty = require'interactive'
 local B = require'binary'
 local T = require'thread'
 local O = require'o'
+local json = require'cjson'
+local socket = require'socket'
 local M = {}
 
 --: ANSI terminal colors and other goodies
@@ -98,12 +100,36 @@ local function stderr_sink(enabled, name, level, msg, ...)
   io.stderr:write (tstamp..color(c)..msg..' '..args..color('norm')..'\n')
 end
 
+local print_struct
+if io.isatty(io.stderr) then
+  function print_struct(msg)
+    io.stderr:write('\27[1m'..msg..'\27[m')
+  end
+else
+  function print_struct(msg)
+    io.stderr:write(msg)
+  end
+end
+
+local function struct_sink(enabled, name, id, object, ctx)
+  if not enabled then return end
+  if name then
+    id = name .. "-" .. id
+  end
+  if ctx then
+    ctx = ', '..ctx
+  else
+    ctx = ''
+  end
+  print_struct(string.format("~ %.3f [", socket.gettime())..json.encode(id)..", "..json.encode(object)..ctx..']\n')
+end
+
 
 
 local Logger = O()
 Logger.loggers = {}
 
-makelogger = O.constructor(function (self, name)
+local makelogger = O.constructor(function (self, name)
   self.name = name
   self.enabled = true
   if name then self.loggers[name] = self end
@@ -121,11 +147,25 @@ Logger.stdsink = stderr_sink
 
 function Logger:sub(name)
   checks('logger', 'string')
+  local l
   if self.name then
-    return makelogger(Logger, self.name..'.'..name)
+    l = makelogger(Logger, self.name..'.'..name)
   else
-    return makelogger(Logger, name)
+    l = makelogger(Logger, name)
   end
+  l.parent = self
+  return l
+end
+
+function Logger:ctx()
+  local ctx = self.context
+  local l = self
+  while true do
+    l = l.parent
+    if not l then break end
+    if l.context then ctx = l.context end
+  end
+  return ctx and ctx()
 end
 
 function Logger:off()
@@ -172,6 +212,11 @@ end
 
 function Logger:error(msg, ...)
   return self('err', msg, ...)
+end
+
+function Logger:struct(id, object)
+  local ctx = self:ctx()
+  struct_sink(self.enabled, self.name, id, object, ctx)
 end
 
 local Logger_mt = {}
