@@ -1,5 +1,5 @@
 -- os.platform needs to be set immediately (IDEA: do it from C)
-os.executable_path, os.platform = ...
+os.executable_path, os.platform, os.arch = ...
 
 package.path = ''
 package.cpath = ''

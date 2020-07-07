@@ -163,9 +163,10 @@ int main (int argc, char **argv)
   char *exedir = get_executable_path ();
   lua_pushstring(L, exedir);
   lua_pushliteral(L, PLATFORM_STRING);
+  lua_pushliteral(L, TOOLCHAIN_ARCH);
   free(exedir);
   current_file = "pcall init";
-  if (lua_pcall (L, 2, 0, -4)) EXIT_ON_LUA_ERROR("initialization code");
+  if (lua_pcall (L, 3, 0, -5)) EXIT_ON_LUA_ERROR("initialization code");
 
   current_ln = -1; current_file = "close";
   lua_close(L);
