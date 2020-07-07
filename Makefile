@@ -80,7 +80,7 @@ pkg: install
 	cd install && tar -c $(PKG)|xz > $(PKG).tar.xz
 	rm -rf install/$(PKG)
 
-l_init.c: luatoc.lua
+l_init.c: luatoc.lua extensions.lua lualib-vendor/* l_init.lua
 	@./quiet "$@" lua $< l_init extensions.lua lualib-vendor/* +l_init.lua
 
 .Makefile.$(ARCH): generate-platform-Makefile
