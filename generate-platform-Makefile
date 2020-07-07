@@ -9,11 +9,11 @@ tmpfile=$(mktemp "$output.XXXXXXX")
 {
 case "$PLATFORM_STRING" in
   linux*)
-    echo "CSRCS+=platform-posix.c l_serial.c"
+    echo "CSRCS+=platform-posix.c common/l_serial.c"
     echo "INSTALLED_FILES=raw-usb.lua"
     ;;
   osx*)
-    echo "CSRCS+=platform-posix.c l_serial.c"
+    echo "CSRCS+=platform-posix.c common/l_serial.c"
     ;;
   win*)
     echo "EXE_SUFFIX=.exe"
