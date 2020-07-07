@@ -73,6 +73,7 @@ install: all .errno.$(BASEARCH).lua
 	rsync -rtL lualib/$(PLATFORM_STRING) $(INST)/lualib
 	$(if $(LUAJIT),rsync -rt toolchains/$(BASEARCH)/lib/lualib-luajit/ $(INST)/lualib/jit/)
 	rsync -rt .errno.$(BASEARCH).lua $(INST)/lualib/$(PLATFORM_STRING)/errno.lua
+	./generate-thb-ver "$(DATE)" > $(INST)/lualib/thb-ver.lua
 
 pkg: install
 	@echo »»» packing $(ARCH) to $(PKG).tar.xz

@@ -1,0 +1,21 @@
+#!/bin/sh
+DATE=$1
+
+cat <<EOF
+local M = {
+  version = "$DATE",
+}
+function M.atleast(v)
+  if M.version < v then
+    error('thb version > '..v..' required (you have '..M.version..')', 2)
+  end
+  return M
+end
+function M.withjit()
+  if not require'thread'.pcall(require, 'jit') then
+    error('LuaJIT thb required (you have PUC Lua thb)', 2)
+  end
+  return M
+end
+return M
+EOF
