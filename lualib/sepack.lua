@@ -196,10 +196,12 @@ do
       data = data:sub(63)
     until #data == 0
     if self.ext.implicit_length then
-      if self.verbose > 2 then
-        for _,out in ipairs(pkgs) do self.log:cyan(string.format('>>[%d]', #out), hex_trunc(out, 20)) end
+      for _,out in ipairs(pkgs) do
+        if self.verbose > 2 then
+          self.log:cyan(string.format('>>[%d]', #out), hex_trunc(out, 20))
+        end
+        self.ext.outbox:put(out)
       end
-      self.ext.outbox:put(pkgs)
     else
       local out = table.concat(pkgs)
       if self.verbose > 2 then self.log:cyan(string.format('>>[%d]', #out), hex_trunc(out, 20)) end
