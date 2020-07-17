@@ -46,7 +46,7 @@ out[#out+1] = [[  ;
 int ]]..func_name..[[ (lua_State *L)
 {
   int n = lua_gettop(L);
-  if (luaL_loadbuffer(L, code, sizeof(code) - 1, "]]..func_name..[[.c")) return lua_error(L);
+  if (luaL_loadbuffer(L, code, sizeof(code) - 1, "@]]..func_name..[[.c")) return lua_error(L);
   lua_insert(L, 1);
   lua_call(L, n, 0);
   return 0;

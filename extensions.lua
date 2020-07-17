@@ -342,12 +342,12 @@ do
       if not fd then return nil end
       local code = fd:read'*a'
       fd:close()
-      local header = string.format(
+      local chunks = {string.format(
         "local __SRC_DIR = %q; local function rrequire(name) return require(%q..name) end;",
         os.dirname(path), name
-      )
-      -- print(name, path, header)
-      return loadstring(header .. code, path)
+      ), code}
+      local i = 0
+      return load(function () i = i + 1 return chunks[i] end, '@'..path)
     end)
   end
 
