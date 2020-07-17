@@ -16,6 +16,7 @@
 -------------------------------------------------------------------------------
 -- Implements xpcall with coroutines
 -------------------------------------------------------------------------------
+local M = {}
 local performResume, handleReturnValue
 local oldpcall, oldxpcall = pcall, xpcall
 
@@ -34,7 +35,7 @@ function performResume(err, co, ...)
     return handleReturnValue(err, co, coroutine.resume(co, ...))
 end    
 
-function coxpcall(f, err, ...)
+function M.coxpcall(f, err, ...)
     local res, co = oldpcall(coroutine.create, f)
     if not res then
         local params = {...}
@@ -52,6 +53,8 @@ local function id(trace, ...)
   return ...
 end
 
-function copcall(f, ...)
+function M.copcall(f, ...)
     return coxpcall(f, id, ...)
 end
+
+return M

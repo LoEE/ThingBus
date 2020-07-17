@@ -366,7 +366,8 @@ static const luaL_Reg bitlib[] = {
 
 
 LUAMOD_API int luaopen_bit32 (lua_State *L) {
-  luaL_newlib(L, bitlib);
+  lua_newtable (L);
+  luaL_register (L, NULL, bitlib);
   return 1;
 }
 

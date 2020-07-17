@@ -25,9 +25,9 @@ local Thread = {
   identity = function (...) return ... end,
 }
 if not jit then
-  require 'coxpcall'
-  Thread.pcall = copcall
-  Thread.xpcall = coxpcall
+  local coxpcall = require 'coxpcall'
+  Thread.pcall = coxpcall.copcall
+  Thread.xpcall = coxpcall.coxpcall
 else
   Thread.pcall = pcall
   Thread.xpcall = xpcall
