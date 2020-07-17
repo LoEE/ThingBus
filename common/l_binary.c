@@ -18,95 +18,14 @@
 #include "modp_b16.h"
 #include "modp_b64.h"
 
-static size_t scan_uint (const char *s, unsigned *u)
-{
-  const char *start = s;
-  unsigned r = 0;
-  while (*s >= '0' && *s <= '9') {
-    r = r * 10 + (*s - '0'); s++;
-  }
-  *u = r;
-  return s - start;
-}
+//### unpack
 
-static int is_little_endian (void)
-{
-  union { int i; char c[sizeof(int)]; } u;
-  u.i = 1;
-  return u.c[0] == 1;
-}
-
-static lua_Number extract_number (const uint8_t *s, size_t n, int le, int issigned)
-{
-  uint32_t r = 0;
-  if (le)
-    for (size_t i = 0; i < n; i++) r += (uint32_t)*s++ << (i * 8);
-  else
-    for (size_t i = 0; i < n; i++) r = (r << 8) + *s++;
-  if (!issigned) return r;
-  uint32_t mask = ~(0UL) << (n * 8 - 1);
-  if (r & mask) r |= mask; // sign extend
-  return (int32_t)r;
-}
-
-static lua_Number extract_number_64 (const uint8_t *s, size_t n, int le, int issigned)
-{
-  uint64_t r = 0;
-  if (le)
-    for (size_t i = 0; i < n; i++) r += (uint64_t)*s++ << (i * 8);
-  else
-    for (size_t i = 0; i < n; i++) r = (r << 8) + *s++;
-  if (!issigned) return r;
-  uint64_t mask = ~(0UL) << (n * 8 - 1);
-  if (r & mask) r |= mask; // sign extend
-  return (int64_t)r;
-}
-
-static lua_Number extract_float (const uint8_t *s, int flipendian)
-{
-  const size_t n = sizeof(float);
-  union { float v; char c[n]; } u;
-  if (flipendian)
-    for (size_t i = 0; i < n; i++) u.c[n-1-i] = *s++;
-  else
-    for (size_t i = 0; i < n; i++) u.c[i] = *s++;
-  return u.v;
-}
-
-static lua_Number extract_double (const uint8_t *s, int flipendian)
-{
-  const size_t n = sizeof(double);
-  union { double v; char c[n]; } u;
-  if (flipendian)
-    for (size_t i = 0; i < n; i++) u.c[n-1-i] = *s++;
-  else
-    for (size_t i = 0; i < n; i++) u.c[i] = *s++;
-  return u.v;
-}
-
-static size_t inject_float (uint8_t *s, int flipendian, lua_Number v)
-{
-  const size_t n = sizeof(float);
-  union { float v; char c[n]; } u;
-  u.v = v;
-  if (flipendian)
-    for (size_t i = 0; i < n; i++) *s++ = u.c[n-1-i];
-  else
-    for (size_t i = 0; i < n; i++) *s++ = u.c[i];
-  return n;
-}
-
-static size_t inject_double (uint8_t *s, int flipendian, lua_Number v)
-{
-  const size_t n = sizeof(double);
-  union { double v; char c[n]; } u;
-  u.v = v;
-  if (flipendian)
-    for (size_t i = 0; i < n; i++) *s++ = u.c[n-1-i];
-  else
-    for (size_t i = 0; i < n; i++) *s++ = u.c[i];
-  return n;
-}
+static size_t scan_uint (const char *s, unsigned *u);
+static int is_little_endian (void);
+static lua_Number extract_number (const uint8_t *s, size_t n, int le, int issigned);
+static lua_Number extract_number_64 (const uint8_t *s, size_t n, int le, int issigned);
+static lua_Number extract_float (const uint8_t *s, int flipendian);
+static lua_Number extract_double (const uint8_t *s, int flipendian);
 
 size_t lua_binary_unpack_ll (lua_State *L, const uint8_t *s, size_t n, const char *f, int *results)
 {
@@ -196,6 +115,79 @@ static int lua_binary_unpack (lua_State *L)
   return results + 1;
 }
 
+// helper functions
+
+static size_t scan_uint (const char *s, unsigned *u)
+{
+  const char *start = s;
+  unsigned r = 0;
+  while (*s >= '0' && *s <= '9') {
+    r = r * 10 + (*s - '0'); s++;
+  }
+  *u = r;
+  return s - start;
+}
+
+static int is_little_endian (void)
+{
+  union { int i; char c[sizeof(int)]; } u;
+  u.i = 1;
+  return u.c[0] == 1;
+}
+
+static lua_Number extract_number (const uint8_t *s, size_t n, int le, int issigned)
+{
+  uint32_t r = 0;
+  if (le)
+    for (size_t i = 0; i < n; i++) r += (uint32_t)*s++ << (i * 8);
+  else
+    for (size_t i = 0; i < n; i++) r = (r << 8) + *s++;
+  if (!issigned) return r;
+  uint32_t mask = ~(0UL) << (n * 8 - 1);
+  if (r & mask) r |= mask; // sign extend
+  return (int32_t)r;
+}
+
+static lua_Number extract_number_64 (const uint8_t *s, size_t n, int le, int issigned)
+{
+  uint64_t r = 0;
+  if (le)
+    for (size_t i = 0; i < n; i++) r += (uint64_t)*s++ << (i * 8);
+  else
+    for (size_t i = 0; i < n; i++) r = (r << 8) + *s++;
+  if (!issigned) return r;
+  uint64_t mask = ~(0UL) << (n * 8 - 1);
+  if (r & mask) r |= mask; // sign extend
+  return (int64_t)r;
+}
+
+static lua_Number extract_float (const uint8_t *s, int flipendian)
+{
+  const size_t n = sizeof(float);
+  union { float v; char c[n]; } u;
+  if (flipendian)
+    for (size_t i = 0; i < n; i++) u.c[n-1-i] = *s++;
+  else
+    for (size_t i = 0; i < n; i++) u.c[i] = *s++;
+  return u.v;
+}
+
+static lua_Number extract_double (const uint8_t *s, int flipendian)
+{
+  const size_t n = sizeof(double);
+  union { double v; char c[n]; } u;
+  if (flipendian)
+    for (size_t i = 0; i < n; i++) u.c[n-1-i] = *s++;
+  else
+    for (size_t i = 0; i < n; i++) u.c[i] = *s++;
+  return u.v;
+}
+
+//### packfloat
+
+static size_t inject_float (uint8_t *s, int flipendian, lua_Number v);
+static size_t inject_double (uint8_t *s, int flipendian, lua_Number v);
+
 static int lua_binary_packfloat (lua_State *L)
 {
   int nativele = is_little_endian();
@@ -221,6 +213,32 @@ static int lua_binary_packfloat (lua_State *L)
   lua_pushlstring(L, (char *)buf, n);
   return 1;
 }
+
+static size_t inject_float (uint8_t *s, int flipendian, lua_Number v)
+{
+  const size_t n = sizeof(float);
+  union { float v; char c[n]; } u;
+  u.v = v;
+  if (flipendian)
+    for (size_t i = 0; i < n; i++) *s++ = u.c[n-1-i];
+  else
+    for (size_t i = 0; i < n; i++) *s++ = u.c[i];
+  return n;
+}
+
+static size_t inject_double (uint8_t *s, int flipendian, lua_Number v)
+{
+  const size_t n = sizeof(double);
+  union { double v; char c[n]; } u;
+  u.v = v;
+  if (flipendian)
+    for (size_t i = 0; i < n; i++) *s++ = u.c[n-1-i];
+  else
+    for (size_t i = 0; i < n; i++) *s++ = u.c[i];
+  return n;
+}
+
+//### unpackbits
 
 static int lua_binary_unpackbits (lua_State *L)
 {
@@ -278,6 +296,8 @@ static int lua_binary_unpackbits (lua_State *L)
   return 1;
 }
 
+//### base64
+
 static int lua_binary_b64_encode (lua_State *L)
 {
   size_t ilen = 0;
@@ -301,6 +321,8 @@ static int lua_binary_b64_decode (lua_State *L)
   return 1;
 }
 
+//### strxor
+
 static int lua_binary_strxor (lua_State *L)
 {
   size_t ilen = 0, klen = 0;
@@ -315,6 +337,8 @@ static int lua_binary_strxor (lua_State *L)
   lua_pushlstring (L, os, op - os);
   return 1;
 }
+
+//###
 
 static const struct luaL_reg functions[] = {
   {"unpack",     lua_binary_unpack     },
