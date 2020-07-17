@@ -9,6 +9,7 @@ setmetatable(_G, {
     error("error: write to a global variable: "..n, 2)
   end,
   __index = function (_, n)
+    if n == 'D' or n == 'log' then rawset(_G, 'D', require'util') return _G[n] end
     error("error: read from a non-existing global variable: "..n, 2)
   end,
 })
