@@ -45,7 +45,7 @@ local function mydofile(fname)
   local src = assert(fd:read'*a')
   fd:close()
   local chunks = {string.format(
-    "local __SRC_DIR = %q; local rrequire = require;",
+    "local __SRC_DIR = %q; local __MAIN__ = true; local rrequire = require;",
     os.dirname(fname)
   ), src}
   local i = 0
