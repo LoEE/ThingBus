@@ -24,7 +24,7 @@ local Thread = {
   sxpcall = xpcall,
   identity = function (...) return ... end,
 }
-if not jit then
+if not rawget(_G, 'jit') then
   local coxpcall = require 'coxpcall'
   Thread.pcall = coxpcall.copcall
   Thread.xpcall = coxpcall.coxpcall

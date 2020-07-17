@@ -135,7 +135,7 @@ local makelogger = O.constructor(function (self, name)
   if name then self.loggers[name] = self end
 end)
 local logger = makelogger(Logger, false)
-_G.log = logger
+rawset(_G, 'log', logger)
 
 logger.null = makelogger(Logger)
 logger.null.stream = T.Publisher:new()

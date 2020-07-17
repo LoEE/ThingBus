@@ -4,6 +4,15 @@ os.executable_path, os.platform, os.arch = ...
 package.path = ''
 package.cpath = ''
 
+setmetatable(_G, {
+  __newindex = function (_, n)
+    error("error: write to a global variable: "..n, 2)
+  end,
+  __index = function (_, n)
+    error("error: read from a non-existing global variable: "..n, 2)
+  end,
+})
+
 require'extensions'
 
 local function addtoPATH(p)
