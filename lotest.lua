@@ -40,6 +40,8 @@ local function test_file_lines(name)
   return function ()
     local line = lines() n = n + 1
     if not line then return nil end
+    local doc = string.match(line, '^%-%-[#%.]+ (.*)$')
+    if doc then in_output = true return 'doc', doc, n, line end
     local input = string.match(line, '^%-%-%$ (.*)$')
     if input then in_output = true return 'input', input, n, line end
     local output = string.match(line, '^%-%-  (.*)$')
@@ -52,9 +54,9 @@ end
 local function test_blocks(test_lines)
   local blocks = {}
   local block, prev_kind
-  for kind, data, n in test_lines do
-    if prev_kind ~= 'input' and kind == 'input' then
-      block = { input = {}, output = {} }
+  for kind, data, n, line in test_lines do
+    if (prev_kind ~= 'input' and prev_kind ~= 'doc') and (kind == 'input' or kind == 'doc') then
+      block = { header = {}, input = {}, output = {} }
       blocks[#blocks+1] = block
     end
     if kind == 'input' then
@@ -66,6 +68,8 @@ local function test_blocks(test_lines)
       end
     elseif kind == 'output' then
       block.output[#block.output + 1] = data
+    elseif kind == 'doc' then
+      block.header[#block.header + 1] = line
     end
     prev_kind = kind
   end
@@ -118,14 +122,24 @@ local function test(name)
     test_env.print = nil
     results = table.concat(results, '\n')
     local expected = table.concat(block.output, '\n')
-    D.green'--$'(D.unq((string.gsub(table.concat(block.input, '\n'), '\n', '\n--$ '))))
-    if results == expected then
-      D.blue'-- '(D.unq((string.gsub(results, '\n', '\n--  '))))
-    else
-      D.red'expected:'()
-      D.blue'-- '(D.unq((string.gsub(expected, '\n', '\n--  '))))
-      D.red'got:'()
-      D.red'-- '(D.unq((string.gsub(results, '\n', '\n--  '))))
+    if #block.header > 0 then
+      D''()
+      for i,line in ipairs(block.header) do
+        D.yellow(line)()
+      end
+    end
+    if #block.input > 0 then
+      D.green'--$'(D.unq((string.gsub(table.concat(block.input, '\n'), '\n', '\n--$ '))))
+    end
+    if #block.output > 0 then
+      if results == expected then
+        D.blue'-- '(D.unq((string.gsub(results, '\n', '\n--  '))))
+      else
+        D.red'expected:'()
+        D.blue'-- '(D.unq((string.gsub(expected, '\n', '\n--  '))))
+        D.red'got:'()
+        D.red'-- '(D.unq((string.gsub(results, '\n', '\n--  '))))
+      end
     end
   end
 end
