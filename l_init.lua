@@ -47,7 +47,9 @@ local function mydofile(fname)
   local chunks = {string.format(
     "local __SRC_DIR = %q; local __MAIN__ = true; local rrequire = require;",
     os.dirname(fname)
-  ), src}
+  )}
+  if src:startswith'#!' then chunks[#chunks+1] = '--' end
+  chunks[#chunks+1] = src
   local i = 0
   local code, syntax_err = load(function () i = i + 1 return chunks[i] end, '@'..fname)
   if not code then return mydofile_error(3, 'Syntax error:\n\t'..syntax_err) end
