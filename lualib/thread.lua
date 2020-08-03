@@ -40,10 +40,10 @@ local weakmt = { __mode = 'k' }
 local thread_names = setmetatable ({}, weakmt)
 local thread_handlers = setmetatable ({}, weakmt)
 local function default_thread_handler(thd, ...)
-  io.stderr:write(string.format("error in %s: %s\n%s\n",
-      Thread.getname (thd),
+  io.stderr:write(string.format("error %s\n%s\nin thread %s",
       (...) or "no message",
-      debug.traceback(thd)))
+      debug.traceback(thd),
+      Thread.getname (thd)))
   os.exit(2)
 end
 local thread_runtimes = setmetatable ({}, weakmt)
