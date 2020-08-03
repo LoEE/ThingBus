@@ -62,22 +62,20 @@ function WebSocket:formatLength(len, mask)
   local b0 = 0
   if mask then b0 = 0x80 end
   if len < 126 then
-    return b0 + len
+    return string.char(b0 + len)
   elseif len < 65536 then
-    return { b0 + 126, B.enc16BE(len) }
+    return string.char(b0 + 126)..B.enc16BE(len)
   elseif len < 0x7fffffff then
-    return { b0 + 127, B.enc64BE(len) }
+    return string.char(b0 + 127)..B.enc64BE(len)
   else
     error('packet too long: '..tostring(len))
   end
 end
 
 function WebSocket:formatPacket(p)
-  local data
-  if p.maskkey then
-    data = B.strxor(p.data, p.maskkey)
-  end
-  return B.flat{ 0x80 + OPCODES(p.opcode), self:formatLength(#p.data, p.maskkey), p.data }
+  local data = p.data
+  if p.maskkey then data = B.strxor(p.data, p.maskkey) end
+  return string.char(0x80 + OPCODES[p.opcode])..self:formatLength(#data, p.maskkey)..data
 end
 
 function WebSocket:readLoop()
@@ -102,7 +100,8 @@ end
 function WebSocket:writeLoop()
   while true do
     local p = self.outbox:recv()
-    local ok, err = loop.write (self.req.sock, self:formatPacket(p))
+    if type(p) == 'table' then p = self:formatPacket(p) end
+    local ok, err = loop.write (self.req.sock, p)
     if not ok then
       if err == 'closed' then return end
       error(err)
@@ -111,6 +110,10 @@ function WebSocket:writeLoop()
       return
     end
   end
+end
+
+function WebSocket:send(packet)
+  self.outbox:put(packet)
 end
 
 function WebSocket:sendText(data)
