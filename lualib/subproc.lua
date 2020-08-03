@@ -1,12 +1,12 @@
 local T = require'thread'
 local O = require'o'
-local o = require'kvo'
 local D = require'util'
 local ev = require'ev'
 local loop = require'loop'
 local posix = require'posix'
 local bio = require'bio'
 local json = require'cjson'
+local lfs = require'lfs'
 
 
 local subproc = O()
@@ -191,10 +191,10 @@ function subproc.popen_lines(cmd)
     end
 end
 
-function try_monitor_jlog(fname, cb)
+local function try_monitor_jlog(fname, cb)
     local lines = subproc.popen_lines("exec tail +0 -F "..fname)
     while true do
-        line = lines()
+        local line = lines()
         if not line then break end
         local data = string.match(line, "^[%%0-9a-f._: -]*~ [0-9.]+ (%[.+%])$")
         if not data then

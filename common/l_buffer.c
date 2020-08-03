@@ -181,6 +181,7 @@ static const struct luaL_reg buffer_methods[] = {
 int luaopen_buffer (lua_State *L)
 {
   luaLM_register_metatable (L, lua_buffer_mt, buffer_methods);
-  luaL_register (L, "buffer", functions);
+  lua_newtable (L);
+  luaL_register (L, NULL, functions);
   return 1;
 }

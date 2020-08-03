@@ -60,6 +60,7 @@ function ExtProc:_start_loop()
     local timeout = T.Timeout:new(self.respawn_period)
     self.log:info("exec", cmd)
     self.exitbox = T.Mailbox:new()
+    local err
     self.procin, err = io.popen(cmd, "w")
     if not self.procin then self.log:error("exec failed", D.unq(err)) end
     self.exitbox:recv()

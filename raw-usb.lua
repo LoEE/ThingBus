@@ -117,7 +117,7 @@ local pin, pout
 
 local function read_usb (fdout)
   local read_cb, read
-  local function read_cb(data, err, fatal, errno)
+  function read_cb(data, err, fatal, errno)
     local errc = E[errno]
     if data then
       loop.write(fdout, #data..'\n'..data..'\n')
@@ -194,8 +194,7 @@ local function open_device(d)
       return error(err)
     end
   end
-  local errc = E[errno]
-  local ok, err = d:set_configuration(2)
+  ok, err = d:set_configuration(2)
   if not ok then
     if d.reset then
       eprintf("error: set_configuration: %s\n", err)
@@ -233,10 +232,10 @@ usb.watch{
     end
     if status then found = true end
   end,
-  disconnect = function (d)
+  disconnect = function (_)
     --eprintf("- %s\n", tostring(d))
   end,
-  coldplug_end = function (d)
+  coldplug_end = function (_)
     if not found then
       loop.write(fdout, "coldplug-end\n")
       --eprintf("coldplug end\n")
