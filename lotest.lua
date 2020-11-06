@@ -26,8 +26,7 @@
 --$ D'qwe'(1, 2, 3)
 --  1 2 3
 --$ 2+"asd"
---  💥 [string "lotest.lua"]:28: attempt to perform arithmetic on a string value
-
+--  💥 lotest.lua:28: attempt to perform arithmetic on a string value
 
 local T = require'thread'
 local D = require'util'
@@ -122,7 +121,7 @@ local function test(name)
     end
     for i,line in ipairs(block.input) do
       D.green'--$'(D.unq(line)) --(string.gsub(table.concat(block.input, '\n'), '\n', '\n--$ '))))
-      local code = loadline(string.rep("\n", block.linenum - 1 + i - 1)..line, name)
+      local code = loadline(string.rep("\n", block.linenum - 1 + i - 1)..line, '@'..name)
       -- `print` calls may add elements to `results` as a side-effect of running
       -- `code` so we need to delay the `#results+1` calculation
       local res = serialize_result(T.spcall(code, 0))
