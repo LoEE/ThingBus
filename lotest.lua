@@ -23,8 +23,10 @@
 --  { "a", b = "c" }
 --$ 1/0
 --  inf
+--$ D'qwe'(1, 2, 3)
+--  1 2 3
 --$ 2+"asd"
---  💥 [string "lotest.lua"]:26: attempt to perform arithmetic on a string value
+--  💥 [string "lotest.lua"]:28: attempt to perform arithmetic on a string value
 
 
 local T = require'thread'
@@ -112,7 +114,14 @@ local function test(name)
         results[#results+1] = ln
       end
     end
+    if #block.header > 0 then
+      D''()
+      for i,line in ipairs(block.header) do
+        D.yellow(line)()
+      end
+    end
     for i,line in ipairs(block.input) do
+      D.green'--$'(D.unq(line)) --(string.gsub(table.concat(block.input, '\n'), '\n', '\n--$ '))))
       local code = loadline(string.rep("\n", block.linenum - 1 + i - 1)..line, name)
       -- `print` calls may add elements to `results` as a side-effect of running
       -- `code` so we need to delay the `#results+1` calculation
@@ -122,15 +131,6 @@ local function test(name)
     test_env.print = nil
     results = table.concat(results, '\n')
     local expected = table.concat(block.output, '\n')
-    if #block.header > 0 then
-      D''()
-      for i,line in ipairs(block.header) do
-        D.yellow(line)()
-      end
-    end
-    if #block.input > 0 then
-      D.green'--$'(D.unq((string.gsub(table.concat(block.input, '\n'), '\n', '\n--$ '))))
-    end
     if #block.output > 0 then
       if results == expected then
         D.blue'-- '(D.unq((string.gsub(results, '\n', '\n--  '))))
