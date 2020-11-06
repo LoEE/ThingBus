@@ -347,7 +347,9 @@ do
         os.dirname(path), name
       ), code}
       local i = 0
-      return load(function () i = i + 1 return chunks[i] end, '@'..path)
+      local fun, err = load(function () i = i + 1 return chunks[i] end, '@'..path)
+      if not fun then error(err, 7) end
+      return fun
     end)
   end
 
