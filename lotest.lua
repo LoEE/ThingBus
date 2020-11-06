@@ -131,7 +131,7 @@ local function test(name)
     test_env.print = nil
     results = table.concat(results, '\n')
     local expected = table.concat(block.output, '\n')
-    if #block.output > 0 then
+    if #results > 0 or #block.output > 0 then
       if results == expected then
         D.blue'-- '(D.unq((string.gsub(results, '\n', '\n--  '))))
       else
