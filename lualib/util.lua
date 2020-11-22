@@ -121,7 +121,13 @@ local function struct_sink(enabled, name, id, object, ctx)
   else
     ctx = ''
   end
-  print_struct(string.format("~ %.3f [", socket.gettime())..json.encode(id)..", "..json.encode(object)..ctx..']\n')
+  local ok, object_json = T.sxpcall(function () return json.encode(object) end, debug.traceback)
+  if not ok then
+    local err = object_json
+    M.red('cannot serialize:')(err, object)
+    error(err)
+  end
+  print_struct(string.format("~ %.3f [", socket.gettime())..json.encode(id)..", "..object_json..ctx..']\n')
 end
 
 
