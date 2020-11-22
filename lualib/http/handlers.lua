@@ -2,7 +2,7 @@ local M = {}
 
 function M.FileHandler (root, file, opts)
   return function (req, path)
-    if file then return req:replyWithFile (root .. file, opts) end
+    if file and #path == 0 then return req:replyWithFile (root .. file, opts) end
     local parts = string.splitall (path, "/")
     local resolved = {}
     for _,part in ipairs(parts) do
