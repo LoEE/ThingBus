@@ -291,6 +291,7 @@ function M.start (router, options)
   if not lsock then
     error('cannot open server socket: '..err)
   end
+  io.setinherit(lsock, false)
   srv.lsock = lsock
   lsock:settimeout (0)
   loop.on_acceptable (lsock, function () local c = lsock:accept(); c:settimeout(0); srv[c] = T.go(M.http_handler, srv, router, c) end, true)
