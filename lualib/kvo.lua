@@ -87,6 +87,8 @@ function M:__call(...)
 end
 
 function Observable:init(init, opts)
+  local src = debug.getinfo(3, "Sln")
+  self.src = '<'..string.sub(src.source, 2)..':'..src.currentline..':'..src.namewhat..' '..(src.name or 'nil')..'>'
   self[_observers] = {}
   self[_value] = init
   self[_version] = 0
