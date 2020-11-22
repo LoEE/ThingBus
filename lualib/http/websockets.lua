@@ -5,15 +5,16 @@ local loop = require'loop'
 
 local M = {}
 
-local function bihash(forward)
-  local reverse = {}
-  for k,v in pairs(forward) do reverse[v] = k end
-  return function (val)
-    return forward[val] or reverse[val] or val
+local function twoway(dict)
+  local out = {}
+  for k,v in pairs(dict) do
+    out[k] = v
+    out[v] = k
   end
+  return out
 end
 
-local OPCODES = bihash{
+local OPCODES = twoway{
   [0x0] = 'Continuation',
   [0x1] = 'Text',
   [0x2] = 'Binary',
@@ -40,7 +41,7 @@ function WebSocket:readPacket(ibuf)
     error(err)
   end
   local p = B.unpackbits(head, 'FIN RSV1 RSV2 RSV3 opcode:4 MASK len:7')
-  p.opcode = OPCODES(p.opcode)
+  p.opcode = OPCODES[p.opcode]
   if p.len == 126 then
     p.len = assert(ibuf:readstruct'>u2')
   elseif p.len == 127 then
