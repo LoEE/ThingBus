@@ -228,6 +228,27 @@ int io_tty_restore (lua_State *L)
   return 0;
 }
 
+#include <sys/stat.h>
+
+int io_file_mtime_size (lua_State *L)
+{
+  const char *path=luaL_checkstring(L, 1);
+  struct stat st;
+
+  if(stat(path, &st) < 0)
+    return luaLM_posix_error(L, "stat");
+#ifdef __APPLE__
+  double mtime = st.st_mtimespec.tv_sec + st.st_mtimespec.tv_nsec / 1.0e9;
+#else
+  double mtime = st.st_mtim.tv_sec + st.st_mtim.tv_nsec / 1.0e9;
+#endif
+
+  lua_pushnumber(L, mtime);
+  lua_pushnumber(L, st.st_size);
+
+  return 2;
+}
+
 static int _ioctl(lua_State *L, int fd, int code, void *arg, const char *name)
 {
   if(ioctl (fd, code, arg) < 0)
@@ -278,6 +299,7 @@ void lua_init_platform_posix(lua_State *L)
     { "get_term_size",   io_get_term_size   },
     { "tty_noecho",      io_tty_noecho      },
     { "tty_restore",     io_tty_restore     },
+    { "file_mtime_size", io_file_mtime_size },
     { 0,                 0                  },
   };
   luaL_register (L, "io", io_additions);
