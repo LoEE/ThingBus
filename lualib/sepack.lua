@@ -866,7 +866,7 @@ function CT.pwm:setup(channels, frequency)
   end
   self.channels = channels
   local freq_mHz = math.floor(frequency * 1000 + .5)
-  local reply = checkerr(self.sepack:setup(self, chnmask..B.enc32BE(freq_mHz)))
+  local reply = checkerr(self.sepack:setup(self, string.char(chnmask)..B.enc32BE(freq_mHz)))
   local actual_freq = B.dec32BE(reply) / 1000
   local resolution = 1/B.dec16BE(reply, 5)
   return actual_freq, resolution
