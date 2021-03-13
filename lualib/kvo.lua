@@ -295,14 +295,12 @@ end
 function ObservableDict:__newindex(k,v)
   assert(type(k) == 'string', 'ObservableDict keys have to be strings')
   local old = self[_value][k]
-  if v ~= nil and old ~= nil then
+  if old ~= nil then
     self:notify('del', k, old)
   end
   self[_value][k] = v
   if v ~= nil then
     self:notify('add', k)
-  else
-    self:notify('del', k, old)
   end
 end
 
