@@ -704,7 +704,6 @@ function CT.adc:_decode(data)
   assert(#data % 2, "invalid ADC data length")
   for i=1,#data,2 do
     local v = B.dec16BE(data, i)
-    if v > 32767 then v = v - 65536 end
     r[#r+1] = v
   end
   return r
