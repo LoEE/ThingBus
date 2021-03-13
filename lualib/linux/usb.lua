@@ -351,6 +351,9 @@ function monitor:enable(add, remove)
       add(d, path)
     elseif action == 'remove' then
       remove(d, path)
+    elseif action == 'bind' or action == 'unbind' then
+      -- these new events were added in linux 4.12, see:
+      -- https://github.com/systemd/systemd/issues/8221
     else
       error(string.format('unknown udev action: %s for device: %s', action, udev_id(d)))
     end
@@ -412,6 +415,7 @@ function usb.watch(o)
       -- workaround a possible race with kernel drivers
       -- otherwise we may succeed with set_configuration and even claim_interface
       -- but the device may still be snatched away from us and reconfigured by the kernel driver
+      -- FIXME: maybe this could be fixed using the new `bind` udev event added in linux 4.12?
       T.sleep(.5)
       o.connect(d)
     end)
