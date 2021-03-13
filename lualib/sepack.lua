@@ -46,8 +46,6 @@ Sepack.new = O.constructor(function (self, ext, _log)
   end)
   self.channels = {}
 
-  self.ext.status:watch(function (...) self:_ext_status(...) end)
-  self:_ext_status(self.ext.status())
   T.go(self._in_loop, self)
 end)
 
@@ -152,26 +150,29 @@ do
   end
 
   function Sepack:_in_loop ()
-    while true do
-      local p = self.ext.inbox:recv()
-      if self.verbose > 2 then self.log:cyan(string.format('<<[%d]', #p), hex_trunc(p, 20)) end
-      local i = 1
-      local id, data, flags, final
-      while i <= #p do
-        id, data, flags, final, i = parse_packet(p, i, self.ext.implicit_length)
-        local channel = self.channels[id]
-        if self.verbose > 1 or not channel then
-          self.log:green(string.format('<%s%s:%x', channel and channel.name or 'ch?',
-                                                   final and "" or "+",
-                                                   flags),
-                         D.hex(data))
+    local events = {
+      [self.ext.inbox] = function (p)
+        if self.verbose > 2 then self.log:cyan(string.format('<<[%d]', #p), hex_trunc(p, 20)) end
+        local i = 1
+        local id, data, flags, final
+        while i <= #p do
+          id, data, flags, final, i = parse_packet(p, i, self.ext.implicit_length)
+          local channel = self.channels[id]
+          if self.verbose > 1 or not channel then
+            self.log:green(string.format('<%s%s:%x', channel and channel.name or 'ch?',
+                                                     final and "" or "+",
+                                                     flags),
+                           D.hex(data))
+          end
+          if channel then
+            -- channel.bytes_received = (channel.bytes_received or 0) + #data
+            channel:_handle_rx(data, flags, final)
+          end
         end
-        if channel then
-          -- channel.bytes_received = (channel.bytes_received or 0) + #data
-          channel:_handle_rx(data, flags, final)
-        end
-      end
-    end
+      end,
+      [self.ext.status] = function (...) self:_ext_status(...) end,
+    }
+    while true do T.recv(events) end
   end
 end
 
