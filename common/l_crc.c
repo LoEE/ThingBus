@@ -140,6 +140,7 @@ static const struct luaL_reg funcs[] = {
 
 int luaopen_crc (lua_State *L)
 {
-  luaL_register (L, "crc", funcs);
+  lua_newtable(L);
+  luaL_register (L, NULL, funcs);
   return 1;
 }

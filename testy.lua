@@ -486,7 +486,7 @@ for _,t in ipairs( tests ) do
   -- made available to the test functions. This happens before every
   -- test in case some module author messes with them.
   _G.assert = _G_assert
-  _G.testy_assert = _G_testy_assert
+  rawset(_G, 'testy_assert', _G_testy_assert)
   -- The test functions are called with `debug.traceback` as error
   -- message handler, so that unhandled errors in test functions can
   -- be reported with stack traces.
