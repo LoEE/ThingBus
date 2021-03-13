@@ -1,5 +1,6 @@
--- os.platform needs to be set immediately (IDEA: do it from C)
 os.executable_path, os.platform, os.arch = ...
+
+_G.thb = {}
 
 package.path = ''
 package.cpath = ''
@@ -33,15 +34,15 @@ local function drop_arguments(n)
   end
 end
 
-local function mydofile_error(code, msg)
+local function dofile_error(code, msg)
   io.stderr:write(msg..'\n')
   io.stderr:flush()
   os.exit(code)
 end
 
-local function mydofile(fname)
+local function dofile(fname)
   local fd, openerr = io.open(fname, 'r')
-  if not fd then return mydofile_error(3, 'Error loading file: '..fname..': '..openerr) end
+  if not fd then return dofile_error(3, 'Error loading file: '..fname..': '..openerr) end
   local src = assert(fd:read'*a')
   fd:close()
   local chunks = {string.format(
@@ -52,15 +53,16 @@ local function mydofile(fname)
   chunks[#chunks+1] = src
   local i = 0
   local code, syntax_err = load(function () i = i + 1 return chunks[i] end, '@'..fname)
-  if not code then return mydofile_error(3, 'Syntax error:\n\t'..syntax_err) end
-  local ok, err = xpcall(code, debug.traceback) local mydofile_tb = debug.traceback():sub(18)
-  local tb_prefix = "\9[C]: in function 'xpcall'\n" .. mydofile_tb
+  if not code then return dofile_error(3, 'Syntax error:\n\t'..syntax_err) end
+  local ok, err = xpcall(code, debug.traceback) local dofile_tb = debug.traceback():sub(18)
+  local tb_prefix = "\9[C]: in function 'xpcall'\n" .. dofile_tb
   if not ok then
-     -- remove pcall, mydofile and our callers from the traceback
+     -- remove pcall, dofile and our callers from the traceback
     if err:sub(#err - #tb_prefix + 1, -1) == tb_prefix then err = err:sub(1, #err - #tb_prefix) end
-    mydofile_error(4, err)
+    dofile_error(4, err)
   end
 end
+thb.dofile = dofile
 
 if not os.basename(arg[0]):startswith"thb" then
   -- FIXME: realpath does not work for executables in PATH
@@ -71,7 +73,7 @@ if not os.basename(arg[0]):startswith"thb" then
     if name:endswith".exe" then
       name = name:sub(1, -5)
     end
-    mydofile(name..'.lua')
+    dofile(name..'.lua')
   end
 elseif arg[1] then
   if string.sub(arg[1], 1, 1) == ':' then
@@ -84,7 +86,7 @@ elseif arg[1] then
   end
   function main()
     drop_arguments(1)
-    mydofile(arg[0])
+    dofile(arg[0])
   end
 else
   function main()

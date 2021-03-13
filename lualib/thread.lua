@@ -42,10 +42,22 @@ local thread_handlers = setmetatable ({}, weakmt)
 local function default_thread_handler(thd, ...)
   io.stderr:write(string.format("error %s\n%s\nin thread %s",
       (...) or "no message",
-      debug.traceback(thd),
+      debug.traceback(thd) or '',
       Thread.getname (thd)))
   os.exit(2)
 end
+
+local function report_error(thd, ...)
+  local handler = thread_handlers[thd] or default_thread_handler
+  local ok, err = Thread.spcall(handler, thd, ...)
+  if not ok then
+    io.stderr:write(string.format("error in thread error handler for %s: %s\n",
+      Thread.getname (thd), err))
+    os.exit(2)
+  end
+end
+Thread.report_error = report_error
+
 local thread_runtimes = setmetatable ({}, weakmt)
 local thread_latencies = {}
 local thread_mailboxes = setmetatable ({}, weakmt)
@@ -122,13 +134,7 @@ function handle_resume_result (thd, tstart, resume_ok, ...)
   local tend = Thread.now()
   add_runtime (thd, tend - tstart)
   if not resume_ok then
-    local handler = thread_handlers[thd] or default_thread_handler
-    local ok, err = Thread.spcall(handler, thd, ...)
-    if not ok then
-      io.stderr:write(string.format("error in thread error handler for %s: %s\n",
-        Thread.getname (thd), err))
-      os.exit(2)
-    end
+    report_error(thd, ...)
   elseif ... then
     return resume(...) -- trampoline
   end
@@ -163,11 +169,7 @@ function handle_resume_result (thd, tstart, resume_ok, ...)
         current_thread = 'thread:       nice'
         nice_list[v] = nil
         local ok, err = xpcall(v, debug.traceback)
-        if not ok then
-          -- FIXME: use default_thread_handler
-          print("error in idle callback: "..err)
-          os.exit(2)
-        end
+        if not ok then report_error(nil, err) end
       else
         break
       end

@@ -227,6 +227,9 @@ end
 
 function Logger.format_traceback_struct(err, thd)
   local loc, file, msg, traceback = string.match(err, "^(([^:]+):[0-9]+): *([^\n]*)\n?(.*)$")
+  if not loc then
+    msg, traceback = string.match(err, "^([^\n]*)\n?(.*)$")
+  end
   local name
   if type(thd) == 'thread' then
     name = T.getname(thd)
@@ -236,7 +239,7 @@ function Logger.format_traceback_struct(err, thd)
     error = msg or err,
     location = loc,
     file = file,
-    traceback = string.gsub(thd and debug.traceback(thd) or traceback, "^stack traceback:\n\t", ""),
+    traceback = string.gsub(thd and debug.traceback(thd) or traceback, "^stack traceback:\n[\t ]+", ""),
   }
 end
 
@@ -259,10 +262,28 @@ stack traceback:
   assert(not ok)
   local p2 = log.format_traceback_struct(err, c)
   assert(p2.error == "asd")
-  assert(p2.file == "logger-patch.lua")
-  assert(string.match(p2.location, "logger%-patch.lua:[0-9]+"))
+  assert(p2.file == "lualib/util.lua")
+  assert(string.match(p2.location, "lualib/util.lua:[0-9]+"))
   assert(string.match(p2.traceback,
-      "%[C%]: in function 'error'\n\009logger%-patch.lua:[0-9]+: in function <logger%-patch.lua:[0-9]+>"))
+      "%[C%]: in function 'error'\n\009lualib/util.lua:[0-9]+: in function <lualib/util.lua:[0-9]+>"))
+  local p3 = log.format_traceback_struct([[attempt to yield across metamethod/C-call boundary
+stack traceback:
+  [C]: in function 'oldyield'
+  .../jpc/Projects/ThingBus/install/osx/lualib/thread.lua:187: in function <.../jpc/Projects/ThingBus/install/osx/lualib/thread.lua:166>
+  (tail call): ?
+  .../jpc/Projects/ThingBus/install/osx/lualib/sepack.lua:234: in function 'on_disconnect'
+  .../jpc/Projects/ThingBus/install/osx/lualib/sepack.lua:88: in function 'on_disconnect'
+  .../jpc/Projects/ThingBus/install/osx/lualib/sepack.lua:71: in function '_ext_status'
+  .../jpc/Projects/ThingBus/install/osx/lualib/sepack.lua:49: in function 'fun'
+  ...ers/jpc/Projects/ThingBus/install/osx/lualib/kvo.lua:209: in function <...ers/jpc/Projects/ThingBus/install/osx/lualib/kvo.lua:209>
+  [C]: in function 'sxpcall'
+  ...ers/jpc/Projects/ThingBus/install/osx/lualib/kvo.lua:209: in function 'notify'
+  ...ers/jpc/Projects/ThingBus/install/osx/lualib/kvo.lua:168: in function <...ers/jpc/Projects/ThingBus/install/osx/lualib/kvo.lua:163>
+  (tail call): ?
+  ...jpc/Projects/ThingBus/install/osx/lualib/extproc.lua:126: in function <...jpc/Projects/ThingBus/install/osx/lualib/extproc.lua:111>
+  (tail call): ?  nil nil]])
+  assert(not p3.loc and not p3.file)
+  assert(p3.error == "attempt to yield across metamethod/C-call boundary")
 end
 
 local Logger_mt = {}
