@@ -1,9 +1,11 @@
-#!/bin/sh
+#!/bin/zsh
 
-make pkg/linux pkg/linux64 pkg/osx64 pkg/osx pkg/osx-jit \
-     pkg/linux-armhf pkg/win32 pkg/win64 pkg/openwrt-mips pkg/openwrt-mips-jit pkg/openwrt-mipsel
-#./remote jpc@green openwrt-mips pkg
-#./remote jpc@green openwrt-mips-uClibc pkg
+targets=(linux{,64,-arm64,-armhf,-armv5} linux{64,-arm64}-musl osx win{32,64} openwrt{-mips,-mipsel})
+targets=(pkg/${^targets}{,-jit})
+
+disabled=(pkg/win32-jit pkg/win64-jit)
+
+make ${targets:|disabled}
 
 DATE=$(date +%Y.%m.%d)
 DIR=thb-$DATE

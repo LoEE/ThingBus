@@ -15,7 +15,7 @@ case "$BASEARCH" in
     ;;
   osx)
     static_libs="$common_static_libs -llua-posix $LUA_LDFLAGS"
-    dynamic_libs="-framework Foundation -framework IOKit -pagezero_size 10000 -image_base 100000000"
+    dynamic_libs="-framework Foundation -framework IOKit"
     ;;
   win*)
     static_libs="$common_static_libs -llua-winapi $LUA_LDFLAGS"
