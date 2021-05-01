@@ -87,12 +87,14 @@ elseif arg[1] then
   function main()
     drop_arguments(1)
     dofile(arg[0])
+    local loop = require'loop'
+    loop.run()
   end
 else
   function main()
     addtoPATH('.')
-    local repl = require'repl'
     local loop = require'loop'
+    local repl = require'repl'
     repl.start(0)
     loop.run()
   end

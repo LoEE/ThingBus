@@ -126,6 +126,7 @@ int main (int argc, char **argv)
 
   ev_async_init(&keyboard_interrupt_watcher, keyboard_interrupt_watcher_cb);
   ev_async_start(EV_DEFAULT, &keyboard_interrupt_watcher);
+  ev_unref(EV_DEFAULT); // do not keep the loop running just because of the keyboard interrupt handler
   lua_sethook (L, lbreak, LUA_MASKCOUNT, 10000);
   enable_keyboard_interrupt_handler();
 
