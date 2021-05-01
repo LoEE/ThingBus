@@ -82,6 +82,7 @@ end
 M.repls = {}
 
 function M.start (file, err_handler)
+  if file == nil then file = 0 end
   if file == 0 and os.platform == "windows" then
     file = console_in()
   end
