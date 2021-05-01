@@ -51,9 +51,14 @@ function M.execute (chunk, ...)
   return agent (chunk, ...)
 end
 
-function M.default_err_handler (cancel, err)
+function M.default_err_handler (cancel, err, file)
   if err == 'eof' then
-    os.exit(0)
+    -- Only exit the process when we were started with a real terminal.
+    -- Otherwise we just finish the repl thread and let the event loop
+    -- continue running.
+    if io.isatty(file) then
+      os.exit(0)
+    end
   else
     print ("repl read error:", err)
     os.exit(3)
@@ -106,7 +111,7 @@ function M.start (file, err_handler)
   reader = T.go(function ()
     while not done do
       local data, err = loop.read(file)
-      if not data then return err_handler (cancel, err) end
+      if not data then return err_handler (cancel, err, file) end
       local chunk, err = M.compile (string.strip (data), "stdin")
       if chunk then
         M.execute(chunk)
