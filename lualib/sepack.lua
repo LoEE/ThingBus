@@ -27,10 +27,46 @@ local function checkerr(data)
   return string.sub(data, 2)
 end
 
+local function ExtProc_connect(address)
+  local log = log:sub'ext':off()
+  local host, port = string.match(address, "tcp:(.-):(.-)")
+  if host and port then
+    return require'cosepack-serial':newTCP(host, 9090, log)
+  end
+  local devname = string.match(address, "serial:(.-)")
+  if devname then
+    return require'cosepack-serial':new('/dev/ttyS1', log)
+  end
+  local usb_spec = string.match(address, "usb:?(.-)")
+  if usb_spec then
+    local usb_product, usb_serial
+    if usb_spec:startswith("SEPACK-") then
+      usb_product = usb_spec
+    else
+      usb_serial = usb_spec
+    end
+    return require'extproc':newUsb(usb_product, usb_serial, log)
+  end
+  error('invalid sepack address: '..tostring(address))
+end
+
+
 
 -- main class:
 local Sepack = O()
 
+-- an alternative (convenience) constructor
+Sepack.open = function (self, args)
+  args = args or {}
+  local addr = args.address or "usb"
+  local ext = ExtProc_connect(addr)
+  local log = args.log or log:sub'sepack'
+  local sepack = self:new(ext, log)
+  sepack.address = addr
+  return sepack
+end
+
+-- the canonical constructor
 Sepack.new = O.constructor(function (self, ext, _log)
   self.verbose = 2
   self.log = _log or log.null
