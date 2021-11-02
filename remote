@@ -3,7 +3,7 @@
 set -e
 
 HOST="$1"
-HOSTDIR="jpc"
+HOSTDIR="."
 ARCH="$2"
 
 if [ "$HOST" = "" -o "$ARCH" = "" ]; then
