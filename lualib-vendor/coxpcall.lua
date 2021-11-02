@@ -54,7 +54,7 @@ local function id(trace, ...)
 end
 
 function M.copcall(f, ...)
-    return coxpcall(f, id, ...)
+    return M.coxpcall(f, id, ...)
 end
 
 return M
