@@ -85,11 +85,20 @@ Sepack.new = O.constructor(function (self, ext, _log)
   T.go(self._in_loop, self)
 end)
 
-function Sepack:mixinChannelTypes(channeltypes)
-  local class = O(Sepack)
-  class.channeltypes = channeltypes
-  return class
+function Sepack:wait()
+  while true do
+    local connected = self.connected()
+    if connected == true then
+      return self
+    elseif connected == false then
+      self.log:warn('• still looking for a sepack on '..self.address)
+    end
+    self.connected:recv()
+  end
 end
+
+
+
 
 function Sepack:_ext_status(status)
   if status == 'connect' then
