@@ -92,7 +92,7 @@ ifneq ($(BASEARCH),osx)
 	@./compile-c $@ -include "errno.h" -E -dM - < /dev/null
 
 .errno.$(BASEARCH).lua: .errno.$(BASEARCH).h
-	@./quiet "$@" lua extract_errno.lua "$@" < "$<"
+	@./quiet "$@" lua5.1 extract_errno.lua "$@" < "$<"
 endif
 
 .errno.osx.lua .errno.osx64.lua:
