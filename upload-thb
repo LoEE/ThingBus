@@ -1,0 +1,10 @@
+#!/bin/zsh
+if [ $# -lt 2 ]; then
+  echo "Usage:
+    upload-thd file host
+" 2>&1
+  exit 2
+fi
+
+cat $1 | xzdec | ssh $2 'mkdir -p /opt; rm -rf /opt/thb* /usr/bin/thb; cd /opt; tar -x && ln -s /opt/thb*/thb /usr/bin'
+#cat $1 | xzdec | ssh $2 'mkdir -p /opt; cd /opt; tar -x'
