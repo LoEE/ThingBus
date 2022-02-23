@@ -13,3 +13,4 @@ void buffer_rseek (struct buffer *b, buflen_t n);
 buflen_t buffer_wpeek (struct buffer *b, uint8_t **s);
 void buffer_wseek (struct buffer *b, buflen_t n);
 int buffer_write (struct buffer *b, const void *s, buflen_t len);
+int buffer_free (struct buffer *b);
