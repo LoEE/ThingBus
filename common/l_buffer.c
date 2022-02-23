@@ -159,6 +159,13 @@ static int lua_buffer_debug (lua_State *L)
   return 1;
 }
 
+static int lua_buffer_free (lua_State *L)
+{
+  struct lua_buffer *lb = luaL_checkudata (L, 1, lua_buffer_mt);
+  buffer_free(&(lb->b));
+  return 0;
+}
+
 static const struct luaL_reg functions[] = {
   {"new",  lua_buffer_new },
   {NULL,   NULL           },
@@ -175,6 +182,7 @@ static const struct luaL_reg buffer_methods[] = {
   {"rseek",      lua_buffer_rseek      },
   {"_debug",     lua_buffer_debug      },
   {"__len",      lua_buffer_len        },
+  {"__gc",       lua_buffer_free       },
   {NULL,         NULL                  },
 };
 
