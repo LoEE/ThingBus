@@ -76,3 +76,16 @@ int buffer_write (struct buffer *b, const void *s, buflen_t len)
   buffer_wseek (b, len);
   return 1;
 }
+
+int buffer_free(struct buffer *b)
+{
+  if (b && b->data) {
+    b->start = b->end = b->size = 0;
+    free(b->data);
+    b->data = NULL;
+
+    return 0;
+  }
+
+  return -1;
+}
